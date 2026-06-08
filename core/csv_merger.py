@@ -88,6 +88,4 @@ def export_excel(df, output_path):
                 )
 
             raise
-
-        return
     wb.save(output_path)

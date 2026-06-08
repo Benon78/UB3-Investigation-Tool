@@ -381,6 +381,12 @@ class MainWindow(QWidget):
             selected_results
         )
 
+        if df is None or df.empty:
+            self.search_tab.status_label.setText(
+                "No CSV data found"
+            )
+            return
+
         from core.analytics import (
             balance_summary
         )
@@ -417,17 +423,25 @@ class MainWindow(QWidget):
         self.dashboard_tab.risk_card.update_value(
             risk_text
         )
-        
-        if df is None:
 
-            self.search_tab.status_label.setText(
-                "No CSV data found"
+        project_root = os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__)
             )
+        )
 
-            return
+        exports_folder = os.path.join(
+            project_root,
+            "exports"
+        )
+
+        os.makedirs(
+            export_folder,
+            exist_ok=True
+        )
 
         output_file = os.path.join(
-            self.folder_path,
+            export_folder,
             f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         )
 
@@ -437,7 +451,7 @@ class MainWindow(QWidget):
         )
 
         self.search_tab.status_label.setText(
-            f"Completed | Records: {len(df)}"
+            f"Completed | Records: {len(df)} | Saved: {os.path.basename(output_file)}"
         )
 
     def add_checkbox(self, row):

@@ -4,5 +4,6 @@ __pycache__/
 *.xlsx
 *.csv
 output/
+exports/
 .idea/
 .vscode/
