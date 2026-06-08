@@ -3,9 +3,11 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton, QLineEdit,
     QFileDialog, QVBoxLayout, QFrame, QApplication,
-    QHBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QTabWidget
+    QHBoxLayout, QTableWidget, QTableWidgetItem,
+     QHeaderView, QScrollArea, QTabWidget, QCheckBox
 )
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from core.customer_finder import find_customer_recursive
 from core.csv_merger import merge_customer_data, export_excel
 from ui.widgets.dashboard_card import DashboardCard
@@ -206,6 +208,27 @@ class MainWindow(QWidget):
             font-weight: bold;
             color: #F58220;
         }
+
+        QCheckBox {
+            spacing: 8px;
+        }
+
+        QCheckBox::indicator {
+            width: 18px;
+            height: 18px;
+        }
+
+        QCheckBox::indicator:unchecked {
+            border: 2px solid #CBD5E1;
+            background: white;
+            border-radius: 4px;
+        }
+
+        QCheckBox::indicator:checked {
+            background: #F58220;
+            border: 2px solid #F58220;
+            border-radius: 4px;
+        }
         """
 
     def set_table_item(self, row, col, value, tooltip=False):
@@ -239,7 +262,7 @@ class MainWindow(QWidget):
             self.search_tab.folder_label.setText("No customer found")
             return
 
-        self.self.search_tab.results_table.setRowCount(
+        self.search_tab.results_table.setRowCount(
             len(results)
         )
 
@@ -253,27 +276,29 @@ class MainWindow(QWidget):
 
             total_csv += csv_count
 
+            self.add_checkbox(row)
+
             self.set_table_item(
                 row,
-                0,
+                1,
                 result["ub3_folder"]
             )
 
             self.set_table_item(
                 row,
-                1,
+                2,
                 result["customer_id"]
             )
 
             self.set_table_item(
                 row,
-                2,
+                3,
                 csv_count
             )
 
             self.set_table_item(
                 row,
-                3,
+                4,
                 result["id_path"],
                 tooltip=True
             )
@@ -282,35 +307,54 @@ class MainWindow(QWidget):
             f"Matches: {len(results)} | CSV Files: {total_csv}"
         )
 
-        self.search_tab.results_table.resizeRowsToContents()
-
         self.search_tab.results_table.resizeColumnsToContents()
 
         self.search_tab.results_table.setColumnWidth(
-            3,
+            0,
+            40
+        )
+
+        self.search_tab.results_table.setColumnWidth(
+            4,
             550
+        )
+
+        self.search_tab.results_table.cellClicked.connect(
+                self.on_table_click
+        )
+
+        self.search_tab.select_all_btn.clicked.connect(
+            self.select_all_rows
         )
 
         self.search_results = results
     
     def analyze_selected(self):
-        selected_rows = set()
-
-        for item in self.search_tab.results_table.selectedItems():
-            selected_rows.add(item.row())
-
-        if not selected_rows:
-            self.search_tab.status_label.setText(
-                "No rows selected"
-            )
-            return
 
         selected_results = []
 
-        for row in selected_rows:
-            selected_results.append(
-                self.search_results[row]
+        for row in range(
+            self.search_tab.results_table.rowCount()
+        ):
+
+            checkbox = self.search_tab.results_table.cellWidget(
+                row,
+                0
             )
+
+            if checkbox and checkbox.isChecked():
+
+                selected_results.append(
+                    self.search_results[row]
+                )
+
+        if not selected_results:
+
+            self.search_tab.status_label.setText(
+                "No UB3 selected"
+            )
+
+            return
 
         self.run_analysis(
             selected_results
@@ -349,15 +393,15 @@ class MainWindow(QWidget):
 
         risk_score, flags = calculate_risk(df)
 
-        self.ub3_card.update_value(
+        self.dashboard_tab.ub3_card.update_value(
             len(selected_results)
         )
 
-        self.records_card.update_value(
+        self.dashboard_tab.records_card.update_value(
             len(df)
         )
 
-        self.balance_card.update_value(
+        self.dashboard_tab.balance_card.update_value(
             balance["current"]
         )
 
@@ -370,7 +414,7 @@ class MainWindow(QWidget):
         else:
             risk_text = "HIGH"
 
-        self.risk_card.update_value(
+        self.dashboard_tab.risk_card.update_value(
             risk_text
         )
         
@@ -396,3 +440,87 @@ class MainWindow(QWidget):
             f"Completed | Records: {len(df)}"
         )
 
+    def add_checkbox(self, row):
+        checkbox = QCheckBox()
+
+        checkbox.stateChanged.connect(
+            self.update_checkbox_selection
+        )
+
+        self.search_tab.results_table.setCellWidget(
+            row,
+            0,
+            checkbox
+        )
+
+    def select_all_rows(self):
+
+        for row in range(
+            self.search_tab.results_table.rowCount()
+        ):
+
+            checkbox = self.search_tab.results_table.cellWidget(
+                row,
+                0
+            )
+
+            if checkbox:
+                checkbox.setChecked(True)
+
+    def update_checkbox_selection(self):
+
+        selected_count = 0
+
+        table = self.search_tab.results_table
+
+        for row in range(table.rowCount()):
+
+            checkbox = table.cellWidget(row, 0)
+
+            checked = (
+                checkbox is not None
+                and checkbox.isChecked()
+            )
+
+            if checked:
+                selected_count += 1
+
+            for col in range(
+                table.columnCount()
+            ):
+
+                item = table.item(row, col)
+
+                if item:
+
+                    if checked:
+
+                        item.setBackground(
+                            QColor("#FFF3E6")
+                        )
+
+                    else:
+
+                        item.setBackground(
+                            QColor("white")
+                        )
+
+        self.search_tab.selection_label.setText(
+            f"Selected: {selected_count} UB3(s)"
+        )
+
+    def on_table_click(self, row, column):
+
+        if column == 0:
+            return
+
+        checkbox = self.search_tab.results_table.cellWidget(
+            row,
+            0
+        )
+
+        if checkbox:
+
+            checkbox.setChecked(
+                not checkbox.isChecked()
+            )

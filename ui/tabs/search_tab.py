@@ -6,7 +6,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QTableWidget,
-    QHeaderView
+    QHeaderView,
+    QAbstractItemView,
+    QCheckBox
 )
 
 from PySide6.QtCore import Qt
@@ -66,9 +68,10 @@ class SearchTab(QWidget):
 
         self.results_table = QTableWidget()
 
-        self.results_table.setColumnCount(4)
+        self.results_table.setColumnCount(5)
 
         self.results_table.setHorizontalHeaderLabels([
+            "",
             "UB3",
             "Customer ID",
             "CSV Files",
@@ -82,6 +85,22 @@ class SearchTab(QWidget):
 
         self.results_table.setMinimumHeight(350)
 
+        self.results_table.setSelectionBehavior(
+            QAbstractItemView.SelectRows
+        )
+
+        self.results_table.setSelectionMode(
+            QAbstractItemView.MultiSelection
+        )
+
+        self.selection_label = QLabel(
+            "Selected: 0 UB3(s)"
+        )
+
+        # self.results_table.cellClicked.connect(
+        #     self.on_table_click
+        # )
+
         button_layout = QHBoxLayout()
 
         self.analyze_selected_btn = QPushButton(
@@ -90,6 +109,14 @@ class SearchTab(QWidget):
 
         self.analyze_all_btn = QPushButton(
             "Analyze All"
+        )
+
+        self.select_all_btn = QPushButton(
+            "Select All"
+        )
+
+        button_layout.addWidget(
+            self.select_all_btn
         )
 
         button_layout.addWidget(
@@ -124,6 +151,10 @@ class SearchTab(QWidget):
 
         layout.addWidget(
             self.results_table
+        )
+
+        layout.addWidget(
+            self.selection_label
         )
 
         layout.addLayout(
