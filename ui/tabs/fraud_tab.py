@@ -203,6 +203,16 @@ class FraudTab(QWidget):
             operations_layout
         )
 
+        self.operations_table.setSortingEnabled(True)
+
+        self.operations_table.setSelectionBehavior(
+            QTableWidget.SelectRows
+        )
+
+        self.operations_table.setEditTriggers(
+            QTableWidget.NoEditTriggers
+        )
+
         # ==========================================
         # Recommendations Tab
         # ==========================================

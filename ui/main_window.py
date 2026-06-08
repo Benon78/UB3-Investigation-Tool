@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import pandas as pd
 
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton, QLineEdit,
@@ -69,6 +70,7 @@ class MainWindow(QWidget):
             self.analyze_all
         )
 
+
         # Dashboard tab
         self.dashboard_tab = DashboardTab()
         self.timeline_tab = TimelineTab()
@@ -80,6 +82,17 @@ class MainWindow(QWidget):
         self.tabs.addTab( self.fraud_tab,"Fraud")
         self.tabs.addTab(QWidget(), "Raw Data")
         self.tabs.addTab(QWidget(), "Export")
+
+        self.timeline_tab.filter_btn.clicked.connect(
+            self.filter_timeline
+        )
+        self.timeline_tab.filter_btn.clicked.connect(
+            self.filter_timeline
+        )
+
+        self.timeline_tab.reset_btn.clicked.connect(
+            self.reset_timeline_filters
+        )
 
         main_layout.addWidget(title)
         main_layout.addWidget(self.tabs)
@@ -419,6 +432,39 @@ class MainWindow(QWidget):
         self.session.operation_counts = (
             operation_counts
         )
+        ops = operation_counts
+
+        self.dashboard_tab.ul_success_card.update_value(
+            ops.get("UL.Success", 0)
+        )
+
+        self.dashboard_tab.ul_fail_card.update_value(
+            ops.get("UL.Fail", 0)
+        )
+
+        self.dashboard_tab.p_success_card.update_value(
+            ops.get("P.Success", 0)
+        )
+
+        self.dashboard_tab.p_fail_card.update_value(
+            ops.get("P.Fail", 0)
+        )
+
+        self.dashboard_tab.reboot_card.update_value(
+            ops.get("F.Reboot", 0)
+        )
+
+        self.dashboard_tab.airwatt_card.update_value(
+            ops.get("UL.Airwatt short", 0)
+        )
+
+        self.dashboard_tab.unique_sn_card.update_value(
+            df["S/N"].nunique()
+        )
+
+        self.dashboard_tab.days_card.update_value(
+            df["Date"].nunique()
+        )
 
         self.dashboard_tab.ub3_card.update_value(
             len(selected_results)
@@ -482,6 +528,9 @@ class MainWindow(QWidget):
 
         self.load_timeline()
         self.load_fraud_tab()
+        self.tabs.setCurrentWidget(
+            self.fraud_tab
+        )
 
     def add_checkbox(self, row):
         checkbox = QCheckBox()
@@ -569,12 +618,11 @@ class MainWindow(QWidget):
             )
 
     def load_timeline(self):
-        df = self.session.df
 
-        if df is None:
+        if self.session.df is None:
             return
 
-        timeline_df = df[
+        timeline_df = self.session.df[
             [
                 "Date",
                 "Time",
@@ -585,7 +633,444 @@ class MainWindow(QWidget):
             ]
         ]
 
+        self.populate_timeline_table(
+            timeline_df
+        )
+
+        self.timeline_tab.timeline_summary.setText(
+            f"Records Found: {len(timeline_df)}"
+        )
+
+    def load_fraud_tab(self):
+
+        self.fraud_tab.flags_list.clear()
+        self.fraud_tab.actions_list.clear()
+
+        risk_level = self.session.risk_level
+        risk_score = self.session.risk_score
+
+        ops = self.session.operation_counts
+
+        # =====================================
+        # Summary Banner
+        # =====================================
+
+        self.fraud_tab.summary_label.setText(
+            f"Risk Level: {risk_level} | "
+            f"Flags: {len(self.session.flags)} | "
+            f"Records: {self.session.record_count}"
+        )
+
+        self.fraud_tab.summary_details.setText(
+            f"""
+            Risk Score: {risk_score}
+            Risk Level: {risk_level}
+
+            Records Analyzed: {self.session.record_count}
+
+            Flags Detected: {len(self.session.flags)}
+
+            Recommendation: Review Alerts, Operations and Recommendations tabs for detailed investigation results.
+            """
+                )
+
+        # =====================================
+        # Dashboard Cards
+        # =====================================
+
+        self.fraud_tab.score_card.update_value(
+            risk_score
+        )
+
+        self.fraud_tab.level_card.update_value(
+            risk_level
+        )
+
+        self.fraud_tab.flags_card.update_value(
+            len(self.session.flags)
+        )
+
+        # =====================================
+        # Risk Colors
+        # =====================================
+
+        if risk_level == "LOW":
+
+            color = "#22C55E"
+
+        elif risk_level == "MEDIUM":
+
+            color = "#EAB308"
+
+        elif risk_level == "HIGH":
+
+            color = "#F97316"
+
+        else:
+
+            color = "#DC2626"
+
+        self.fraud_tab.level_card.value_label.setStyleSheet(
+            f"""
+            font-size: 28px;
+            font-weight: bold;
+            color: {color};
+            """
+        )
+
+        # =====================================
+        # Alerts
+        # =====================================
+
+        suspicious_count = len(
+            self.session.flags
+        )
+
+        self.fraud_tab.operations_card.update_value(
+            suspicious_count
+        )
+
+        if suspicious_count == 0:
+
+            self.fraud_tab.flags_list.addItem(
+                "🟢 No alerts detected"
+            )
+
+        else:
+
+            for flag in self.session.flags:
+
+                self.fraud_tab.flags_list.addItem(
+                    f"⚠ {flag}"
+                )
+
+        # =====================================
+        # Operations Table
+        # =====================================
+
+        table = self.fraud_tab.operations_table
+
+        table.clearContents()
+
+        table.setRowCount(
+            len(ops)
+        )
+
+        sorted_ops = sorted(
+            ops.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        for row, (operation, count) in enumerate(
+            sorted_ops
+        ):
+
+            op_item = QTableWidgetItem(
+                operation
+            )
+
+            count_item = QTableWidgetItem(
+                str(count)
+            )
+
+            if operation in [
+                "UL.Fail",
+                "P.Fail",
+                "F.Reboot",
+                "UL.Airwatt short",
+                "AL.Unlocked"
+            ]:
+
+                op_item.setBackground(
+                    QColor("#FFE5E5")
+                )
+
+                count_item.setBackground(
+                    QColor("#FFE5E5")
+                )
+
+            table.setItem(
+                row,
+                0,
+                op_item
+            )
+
+            table.setItem(
+                row,
+                1,
+                count_item
+            )
+
+        table.resizeColumnsToContents()
+
+        # =====================================
+        # Recommendations
+        # =====================================
+
+        actions = []
+
+        ul_fail = ops.get(
+            "UL.Fail",
+            0
+        )
+
+        p_fail = ops.get(
+            "P.Fail",
+            0
+        )
+
+        reboot = ops.get(
+            "F.Reboot",
+            0
+        )
+
+        airwatt_short = ops.get(
+            "UL.Airwatt short",
+            0
+        )
+
+        if ul_fail > 20:
+
+            actions.append(
+                f"🔴 Critical: {ul_fail} unlock failures detected. Immediate investigation required."
+            )
+
+        elif ul_fail > 5:
+
+            actions.append(
+                f"🟠 Review unlock failures ({ul_fail})."
+            )
+
+        if p_fail > 10:
+
+            actions.append(
+                f"🔴 Review passcode abuse activity ({p_fail} failures)."
+            )
+
+        if reboot > 10:
+
+            actions.append(
+                f"🟠 Device rebooted {reboot} times. Check hardware stability."
+            )
+
+        if airwatt_short > 5:
+
+            actions.append(
+                f"🟡 Low balance unlock attempts detected."
+            )
+
+        if len(actions) == 0:
+
+            actions.append(
+                "🟢 No suspicious activity detected."
+            )
+
+        for action in actions:
+
+            self.fraud_tab.actions_list.addItem(
+                action
+            )
+
+    def filter_timeline(self):
+
+        df = self.session.df
+
+        if df is None or df.empty:
+            return
+
+        filtered = df.copy()
+
+        # ==========================
+        # Operation Filter
+        # ==========================
+
+        operation = (
+            self.timeline_tab.operation_filter.currentText()
+        )
+
+        if operation != "All Operations":
+
+            filtered = filtered[
+                filtered["Operation"] == operation
+            ]
+
+        # ==========================
+        # Keyword Filter
+        # ==========================
+
+        keyword = (
+            self.timeline_tab.search_input.text()
+            .strip()
+            .lower()
+        )
+
+        if keyword:
+
+            filtered = filtered[
+
+                filtered["Operation"]
+                .astype(str)
+                .str.lower()
+                .str.contains(
+                    keyword,
+                    na=False
+                )
+
+                |
+
+                filtered["S/N"]
+                .astype(str)
+                .str.lower()
+                .str.contains(
+                    keyword,
+                    na=False
+                )
+            ]
+
+        # ==========================
+        # Balance Filter
+        # ==========================
+
+        min_balance = (
+            self.timeline_tab.min_balance.value()
+        )
+
+        max_balance = (
+            self.timeline_tab.max_balance.value()
+        )
+
+        if "Balance" in filtered.columns:
+
+            balance_series = (
+                filtered["Balance"]
+                .astype(str)
+                .str.replace(
+                    ",",
+                    "",
+                    regex=False
+                )
+            )
+
+            balance_series = balance_series.replace(
+                "",
+                "0"
+            )
+
+            filtered["Balance_Num"] = (
+                balance_series.astype(float)
+            )
+
+            filtered = filtered[
+
+                (
+                    filtered["Balance_Num"]
+                    >= min_balance
+                )
+
+                &
+
+                (
+                    filtered["Balance_Num"]
+                    <= max_balance
+                )
+            ]
+
+        # ==========================
+        # Date Filter
+        # ==========================
+
+        try:
+
+            from_date = (
+                self.timeline_tab.date_from.date()
+                .toPython()
+            )
+
+            to_date = (
+                self.timeline_tab.date_to.date()
+                .toPython()
+            )
+
+            date_series = (
+                filtered["Date"]
+                .astype(str)
+            )
+
+            parsed_dates = None
+
+            for fmt in [
+                "%Y/%m/%d",
+                "%Y-%m-%d",
+                "%d/%m/%Y"
+            ]:
+
+                try:
+
+                    parsed_dates = pd.to_datetime(
+                        date_series,
+                        format=fmt,
+                        errors="coerce"
+                    )
+
+                    if parsed_dates.notna().sum() > 0:
+                        break
+
+                except:
+                    pass
+
+            if parsed_dates is not None:
+
+                filtered = filtered[
+                    (
+                        parsed_dates.dt.date
+                        >= from_date
+                    )
+
+                    &
+
+                    (
+                        parsed_dates.dt.date
+                        <= to_date
+                    )
+                ]
+
+        except Exception as e:
+
+            print(
+                f"Date Filter Error: {e}"
+            )
+
+        # ==========================
+        # Display Results
+        # ==========================
+
+        timeline_df = filtered[
+            [
+                "Date",
+                "Time",
+                "Operation",
+                "Payment",
+                "Balance",
+                "S/N"
+            ]
+        ]
+
+        self.populate_timeline_table(
+            timeline_df
+        )
+
+        self.timeline_tab.timeline_summary.setText(
+            f"Records Found: {len(timeline_df)}"
+        )
+
+    def populate_timeline_table(self, timeline_df):
+
         table = self.timeline_tab.table
+
+        table.setSortingEnabled(False)
+
+        table.clearContents()
 
         table.setRowCount(
             len(timeline_df)
@@ -607,247 +1092,62 @@ class MainWindow(QWidget):
                     item
                 )
 
-def load_fraud_tab(self):
+        table.setSortingEnabled(True)
 
-    self.fraud_tab.flags_list.clear()
-    self.fraud_tab.actions_list.clear()
+    def reset_timeline_filters(self):
 
-    risk_level = self.session.risk_level
-    risk_score = self.session.risk_score
+        if self.session.df is None:
+            return
 
-    ops = self.session.operation_counts
+        # Reset Controls
 
-    # =====================================
-    # Summary Banner
-    # =====================================
-
-    self.fraud_tab.summary_label.setText(
-        f"Risk Level: {risk_level} | "
-        f"Flags: {len(self.session.flags)} | "
-        f"Records: {self.session.record_count}"
-    )
-
-    self.fraud_tab.summary_details.setText(
-        f"""
-        INVESTIGATION SUMMARY
-
-        Risk Score: {risk_score}
-        Risk Level: {risk_level}
-
-        Records Analyzed:
-        {self.session.record_count}
-
-        Flags Detected:
-        {len(self.session.flags)}
-
-        Recommendation:
-        Review Alerts, Operations and Recommendations tabs
-        for detailed investigation results.
-        """
-            )
-
-    # =====================================
-    # Dashboard Cards
-    # =====================================
-
-    self.fraud_tab.score_card.update_value(
-        risk_score
-    )
-
-    self.fraud_tab.level_card.update_value(
-        risk_level
-    )
-
-    self.fraud_tab.flags_card.update_value(
-        len(self.session.flags)
-    )
-
-    # =====================================
-    # Risk Colors
-    # =====================================
-
-    if risk_level == "LOW":
-
-        color = "#22C55E"
-
-    elif risk_level == "MEDIUM":
-
-        color = "#EAB308"
-
-    elif risk_level == "HIGH":
-
-        color = "#F97316"
-
-    else:
-
-        color = "#DC2626"
-
-    self.fraud_tab.level_card.value_label.setStyleSheet(
-        f"""
-        font-size: 28px;
-        font-weight: bold;
-        color: {color};
-        """
-    )
-
-    # =====================================
-    # Alerts
-    # =====================================
-
-    suspicious_count = len(
-        self.session.flags
-    )
-
-    self.fraud_tab.operations_card.update_value(
-        suspicious_count
-    )
-
-    if suspicious_count == 0:
-
-        self.fraud_tab.flags_list.addItem(
-            "🟢 No alerts detected"
+        self.timeline_tab.operation_filter.setCurrentIndex(
+            0
         )
 
-    else:
+        self.timeline_tab.search_input.clear()
 
-        for flag in self.session.flags:
-
-            self.fraud_tab.flags_list.addItem(
-                f"⚠ {flag}"
-            )
-
-    # =====================================
-    # Operations Table
-    # =====================================
-
-    table = self.fraud_tab.operations_table
-
-    table.clearContents()
-
-    table.setRowCount(
-        len(ops)
-    )
-
-    sorted_ops = sorted(
-        ops.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
-
-    for row, (operation, count) in enumerate(
-        sorted_ops
-    ):
-
-        op_item = QTableWidgetItem(
-            operation
+        self.timeline_tab.min_balance.setValue(
+            0
         )
 
-        count_item = QTableWidgetItem(
-            str(count)
+        self.timeline_tab.max_balance.setValue(
+            99999999
         )
 
-        if operation in [
-            "UL.Fail",
-            "P.Fail",
-            "F.Reboot",
-            "UL.Airwatt short",
-            "AL.Unlocked"
-        ]:
+        # Reset Dates
 
-            op_item.setBackground(
-                QColor("#FFE5E5")
-            )
+        from PySide6.QtCore import QDate
 
-            count_item.setBackground(
-                QColor("#FFE5E5")
-            )
+        today = QDate.currentDate()
 
-        table.setItem(
-            row,
-            0,
-            op_item
+        self.timeline_tab.date_from.setDate(
+            today.addYears(-1)
         )
 
-        table.setItem(
-            row,
-            1,
-            count_item
+        self.timeline_tab.date_to.setDate(
+            today
         )
 
-    table.resizeColumnsToContents()
+        # Reload Original Dataset
 
-    # =====================================
-    # Recommendations
-    # =====================================
+        timeline_df = self.session.df[
+            [
+                "Date",
+                "Time",
+                "Operation",
+                "Payment",
+                "Balance",
+                "S/N"
+            ]
+        ]
 
-    actions = []
-
-    ul_fail = ops.get(
-        "UL.Fail",
-        0
-    )
-
-    p_fail = ops.get(
-        "P.Fail",
-        0
-    )
-
-    reboot = ops.get(
-        "F.Reboot",
-        0
-    )
-
-    airwatt_short = ops.get(
-        "UL.Airwatt short",
-        0
-    )
-
-    if ul_fail > 20:
-
-        actions.append(
-            f"🔴 Critical: {ul_fail} unlock failures detected. Immediate investigation required."
+        self.populate_timeline_table(
+            timeline_df
         )
 
-    elif ul_fail > 5:
-
-        actions.append(
-            f"🟠 Review unlock failures ({ul_fail})."
+        self.timeline_tab.timeline_summary.setText(
+            f"Records Found: {len(timeline_df)}"
         )
-
-    if p_fail > 10:
-
-        actions.append(
-            f"🔴 Review passcode abuse activity ({p_fail} failures)."
-        )
-
-    if reboot > 10:
-
-        actions.append(
-            f"🟠 Device rebooted {reboot} times. Check hardware stability."
-        )
-
-    if airwatt_short > 5:
-
-        actions.append(
-            f"🟡 Low balance unlock attempts detected."
-        )
-
-    if len(actions) == 0:
-
-        actions.append(
-            "🟢 No suspicious activity detected."
-        )
-
-    for action in actions:
-
-        self.fraud_tab.actions_list.addItem(
-            action
-        )
-
-
-
-
-
-
 
 
