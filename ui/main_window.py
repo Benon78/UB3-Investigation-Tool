@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from core.customer_finder import find_customer_recursive
 from core.csv_merger import merge_customer_data, export_excel
+from ui.dashboard_widgets import DashboardCard
 
 
 class MainWindow(QWidget):
@@ -123,7 +124,7 @@ class MainWindow(QWidget):
         self.results_table.setShowGrid(False)
         self.results_table.setSortingEnabled(True)
         self.results_table.verticalHeader().setVisible(False)
-        self.results_table.verticalHeader().setDefaultSectionSize(35)
+        self.results_table.verticalHeader().setDefaultSectionSize(25)
 
         self.results_table.setVerticalScrollBarPolicy(
             Qt.ScrollBarAsNeeded
@@ -166,20 +167,34 @@ class MainWindow(QWidget):
         )
 
         # Summary Label
-        self.summary_label = QLabel(
-            "Matches: 0 | CSV Files: 0"
-        )
+        # self.summary_label = QLabel(
+        #     "Matches: 0 | CSV Files: 0"
+        # )
 
+        # Dashboard Area
+        dashboard_layout = QHBoxLayout()
+
+        self.ub3_card = DashboardCard("UB3 Found")
+        self.records_card = DashboardCard("Records")
+        self.balance_card = DashboardCard("Balance")
+        self.risk_card = DashboardCard("Risk")
+
+        dashboard_layout.addWidget(self.ub3_card)
+        dashboard_layout.addWidget(self.records_card)
+        dashboard_layout.addWidget(self.balance_card)
+        dashboard_layout.addWidget(self.risk_card)
+
+        # Card layout
         card_layout.addWidget(self.folder_label)
         card_layout.addWidget(browse_btn)
         card_layout.addWidget(self.customer_input)
         card_layout.addWidget(self.search_btn)
+        card_layout.addLayout(dashboard_layout)
         card_layout.addWidget(
             self.results_table,
             stretch=1
         )
-        # card_layout.addWidget(self.analyze_btn)
-        card_layout.addWidget(self.summary_label)
+        # card_layout.addWidget(self.summary_label)
         card_layout.addWidget(self.status_label)
         card_layout.addLayout(buttons_layout)
 
@@ -367,9 +382,9 @@ class MainWindow(QWidget):
                 tooltip=True
             )
 
-        self.summary_label.setText(
-            f"Matches: {len(results)} | CSV Files: {total_csv}"
-        )
+        # self.summary_label.setText(
+        #     f"Matches: {len(results)} | CSV Files: {total_csv}"
+        # )
 
         # self.results_table.resizeRowsToContents()
 
@@ -426,6 +441,43 @@ class MainWindow(QWidget):
             selected_results
         )
 
+        from core.analytics import (
+            balance_summary
+        )
+
+        from core.fraud import (
+            calculate_risk
+        )
+
+        balance = balance_summary(df)
+
+        risk_score, flags = calculate_risk(df)
+
+        self.ub3_card.update_value(
+            len(selected_results)
+        )
+
+        self.records_card.update_value(
+            len(df)
+        )
+
+        self.balance_card.update_value(
+            balance["current"]
+        )
+
+        if risk_score <= 20:
+            risk_text = "LOW"
+
+        elif risk_score <= 50:
+            risk_text = "MEDIUM"
+
+        else:
+            risk_text = "HIGH"
+
+        self.risk_card.update_value(
+            risk_text
+        )
+        
         if df is None:
 
             self.status_label.setText(
