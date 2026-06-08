@@ -411,11 +411,14 @@ class MainWindow(QWidget):
         )
 
         balance = balance_summary(df)
-        risk_score, flags = calculate_risk(df)
+        risk_score, flags, operation_counts = calculate_risk(df)
 
         self.session.balance_summary = balance
         self.session.risk_score = risk_score
         self.session.flags = flags
+        self.session.operation_counts = (
+            operation_counts
+        )
 
         self.dashboard_tab.ub3_card.update_value(
             len(selected_results)
@@ -609,15 +612,159 @@ class MainWindow(QWidget):
 
         self.fraud_tab.flags_list.clear()
 
-        self.fraud_tab.risk_label.setText(
-            f"Risk Level: {self.session.risk_level}"
+        risk_level = self.session.risk_level
+
+        self.fraud_tab.level_card.update_value(
+            risk_level
         )
+
+        if risk_level == "LOW":
+
+            self.fraud_tab.level_card.value_label.setStyleSheet("""
+                font-size: 28px;
+                font-weight: bold;
+                color: #22C55E;
+            """)
+
+        elif risk_level == "MEDIUM":
+
+            self.fraud_tab.level_card.value_label.setStyleSheet("""
+                font-size: 28px;
+                font-weight: bold;
+                color: #EAB308;
+            """)
+
+        elif risk_level == "HIGH":
+
+            self.fraud_tab.level_card.value_label.setStyleSheet("""
+                font-size: 28px;
+                font-weight: bold;
+                color: #F97316;
+            """)
+
+        else:
+
+            self.fraud_tab.level_card.value_label.setStyleSheet("""
+                font-size: 28px;
+                font-weight: bold;
+                color: #DC2626;
+            """)
+
+        self.fraud_tab.level_card.update_value(
+            self.session.risk_level
+        )
+
+        self.fraud_tab.flags_card.update_value(
+            len(self.session.flags)
+        )
+
+        suspicious_count = 0
 
         for flag in self.session.flags:
 
             self.fraud_tab.flags_list.addItem(
-                str(flag)
+                f"⚠ {flag}"
             )
+
+            suspicious_count += 1
+
+        self.fraud_tab.operations_card.update_value(
+            suspicious_count
+        )
+
+        ops = self.session.operation_counts
+
+        table = self.fraud_tab.operations_table
+
+        table.setRowCount(
+            len(ops)
+        )
+
+        sorted_ops = sorted(
+            ops.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        for row, (operation, count) in enumerate(
+            sorted_ops
+        ):
+            op_item = QTableWidgetItem(
+                operation
+            )
+
+            if operation in [
+                "UL.Fail",
+                "P.Fail",
+                "F.Reboot",
+                "UL.Airwatt short"
+            ]:
+
+               op_item.setBackground(
+                    QColor("#FFF3CD")
+                )
+
+            table.setItem(
+                row,
+                0,
+                op_item
+            )
+
+            table.setItem(
+                row,
+                1,
+                QTableWidgetItem(str(count))
+            )
+        
+        actions = []
+
+        for flag in self.session.flags:
+
+            if "Unlock Failure" in flag:
+
+                actions.append(
+                    "Review UL.Fail events in Timeline."
+                )
+
+            if "Passcode" in flag:
+
+                actions.append(
+                    "Verify customer passcode history."
+                )
+
+            if "Reboot" in flag:
+
+                actions.append(
+                    "Check reboot frequency and device stability."
+                )
+
+            if "Low Balance" in flag:
+
+                actions.append(
+                    "Inspect Airwatt balance movements."
+                )
+
+            if "Unlock Attempts" in flag:
+
+                actions.append(
+                    "Verify lantern lock status."
+                )
+
+        if not actions:
+
+            actions.append(
+                "No suspicious activity detected."
+            )
+
+        self.fraud_tab.actions_box.setPlainText(
+            "\n".join(actions)
+        )
+
+        self.fraud_tab.summary_label.setText(
+            f"Risk Level: {self.session.risk_level} | "
+            f"Flags: {len(self.session.flags)} | "
+            f"Records: {self.session.record_count}"
+        )
 
 
 

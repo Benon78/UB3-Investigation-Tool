@@ -23,3 +23,5 @@ class AnalysisSession:
         self.flags = []
 
         self.selected_results = []
+        
+        self.operation_counts = {}
