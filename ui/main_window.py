@@ -16,7 +16,8 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("UB3 Customer Analyzer")
-        self.resize(1200, 750)
+        self.resize(1280, 800)
+        self.setMinimumSize(1100, 700)
 
         self.folder_path = ""
         self.search_btn = None
@@ -42,11 +43,6 @@ class MainWindow(QWidget):
 
         card_layout = QVBoxLayout()
         card_layout.setSpacing(15)
-
-        # Window Scrollable
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(card)
 
         # Folder
         self.folder_label = QLabel("Root Folder: Not selected")
@@ -114,7 +110,7 @@ class MainWindow(QWidget):
         # Results Table
         self.results_table = QTableWidget()
         self.results_table.setColumnCount(4)
-        self.results_table.setMinimumHeight(210)
+        self.results_table.setMinimumHeight(350)
 
         self.results_table.setHorizontalHeaderLabels([
             "UB3 Serial Number",
@@ -177,21 +173,20 @@ class MainWindow(QWidget):
         card_layout.addWidget(self.folder_label)
         card_layout.addWidget(browse_btn)
         card_layout.addWidget(self.customer_input)
+        card_layout.addWidget(self.search_btn)
         card_layout.addWidget(
             self.results_table,
             stretch=1
         )
-        card_layout.addWidget(self.search_btn)
         # card_layout.addWidget(self.analyze_btn)
-        card_layout.addWidget(self.status_label)
         card_layout.addWidget(self.summary_label)
+        card_layout.addWidget(self.status_label)
         card_layout.addLayout(buttons_layout)
 
         card.setLayout(card_layout)
 
         main_layout.addWidget(title)
         main_layout.addWidget(card)
-        # main_layout.addWidget(scroll)
 
         self.setLayout(main_layout)
 
@@ -333,16 +328,6 @@ class MainWindow(QWidget):
             self.folder_label.setText("No customer found")
             return
 
-        # text = f"Found {len(results)} match(es)\n\n"
-
-        # for r in results:
-        #     text += f"UB3: {r['ub3_folder']}\n"
-        #     text += f"UB3 Located At: {r['ub3_path']}\n"
-        #     text += f"ID: {r['customer_id']}\n"
-        #     text += f"ID Path: {r['id_path']}\n"
-        #     text += f"CSV Files: {len(r['csv_files'])}\n\n"
-        # self.folder_label.setText(f"Root Folder: {text}")
-
         self.results_table.setRowCount(
             len(results)
         )
@@ -386,7 +371,7 @@ class MainWindow(QWidget):
             f"Matches: {len(results)} | CSV Files: {total_csv}"
         )
 
-        self.results_table.resizeRowsToContents()
+        # self.results_table.resizeRowsToContents()
 
         self.results_table.resizeColumnsToContents()
 
