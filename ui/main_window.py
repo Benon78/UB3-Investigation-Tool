@@ -31,224 +31,50 @@ class MainWindow(QWidget):
         self.build_ui()
 
     def build_ui(self):
-
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setSpacing(10)
 
-        title = QLabel(
-            "UB3 CUSTOMER ANALYZER"
-        )
-
-        title.setObjectName(
-            "title"
-        )
-
-        title.setAlignment(
-            Qt.AlignCenter
-        )
+        title = QLabel("UB3 CUSTOMER ANALYZER")
+        title.setObjectName("appTitle")
+        title.setAlignment(Qt.AlignCenter)
 
         self.tabs = QTabWidget()
+        self.tabs.setObjectName("mainTabs")
 
+        # Search tab
         self.search_tab = SearchTab()
 
+        self.search_tab.browse_btn.clicked.connect(
+            self.select_folder
+        )
+
+        self.search_tab.search_btn.clicked.connect(
+            self.search_customer
+        )
+
+        self.search_tab.analyze_selected_btn.clicked.connect(
+            self.analyze_selected
+        )
+
+        self.search_tab.analyze_all_btn.clicked.connect(
+            self.analyze_all
+        )
+
+        # Dashboard tab
         self.dashboard_tab = DashboardTab()
 
-        self.tabs.addTab(
-            self.search_tab,
-            "Search"
-        )
+        self.tabs.addTab(self.search_tab, "Search")
+        self.tabs.addTab(self.dashboard_tab, "Dashboard")
+        self.tabs.addTab(QWidget(), "Timeline")
+        self.tabs.addTab(QWidget(), "Fraud")
+        self.tabs.addTab(QWidget(), "Raw Data")
+        self.tabs.addTab(QWidget(), "Export")
 
-        self.tabs.addTab(
-            self.dashboard_tab,
-            "Dashboard"
-        )
+        main_layout.addWidget(title)
+        main_layout.addWidget(self.tabs)
 
-        main_layout.addWidget(
-            title
-        )
-
-        main_layout.addWidget(
-            self.tabs
-        )
-
-        self.setLayout(
-            main_layout
-        )
-
-        # main_layout = QVBoxLayout()
-        # main_layout.setContentsMargins(30, 30, 30, 30)
-        # main_layout.setSpacing(20)
-
-        # # Title
-        # title = QLabel("UB3 CUSTOMER ANALYZER")
-        # title.setObjectName("title")
-        # title.setAlignment(Qt.AlignCenter)
-
-        # # Card container
-        # card = QFrame()
-        # card.setObjectName("card")
-
-        # card_layout = QVBoxLayout()
-        # card_layout.setSpacing(15)
-
-        # # Folder
-        # self.folder_label = QLabel("Root Folder: Not selected")
-        # self.folder_label.setStyleSheet("""
-        #     color: #F58220;
-        #     font-weight: bold;
-        #     background-color: #FFF7ED;
-        #     padding: 8px;
-        #     border-radius: 6px;
-        # """)
-
-        # browse_btn = QPushButton("Browse Folder")
-        # browse_btn.clicked.connect(self.select_folder)
-
-        # # Status label
-        # self.status_label = QLabel("Ready")
-        # self.status_label.setStyleSheet("""
-        #     color: #0F172A;
-        #     font-weight: bold;
-        #     background-color: #FFF7ED;
-        #     padding: 8px;
-        #     border-radius: 6px;
-        # """)
-
-        # # Customer ID input
-        # self.customer_input = QLineEdit()
-        # self.customer_input.setPlaceholderText("Enter Customer ID e.g. 33883")
-
-        # # Search button
-        # self.search_btn = QPushButton("Find Customer")
-        # self.search_btn.setObjectName("primaryBtn")
-        # self.search_btn.clicked.connect(self.search_customer)
-        # self.search_btn.setCursor(Qt.PointingHandCursor)
-        # browse_btn.setCursor(Qt.PointingHandCursor)
-
-        # # Analyze button
-        # buttons_layout = QHBoxLayout()
-        # self.analyze_selected_btn = QPushButton(
-        #     "Analyze Selected"
-        # )
-
-        # self.analyze_all_btn = QPushButton(
-        #     "Analyze All"
-        # )
-
-        # buttons_layout.addWidget(
-        #     self.analyze_selected_btn
-        # )
-
-        # buttons_layout.addWidget(
-        #     self.analyze_all_btn
-        # )
-        # self.analyze_all_btn.setCursor(Qt.PointingHandCursor)
-        # self.analyze_selected_btn.setCursor(Qt.PointingHandCursor)
-        # browse_btn.setCursor(Qt.PointingHandCursor)
-
-        # self.analyze_selected_btn.clicked.connect(
-        #     self.analyze_selected
-        # )
-
-        # self.analyze_all_btn.clicked.connect(
-        #     self.analyze_all
-        # )
-
-        # # Results Table
-        # self.results_table = QTableWidget()
-        # self.results_table.setColumnCount(4)
-        # self.results_table.setMinimumHeight(350)
-
-        # self.results_table.setHorizontalHeaderLabels([
-        #     "UB3 Serial Number",
-        #     "Customer ID",
-        #     "CSV Files",
-        #     "Folder Path"
-        # ])
-
-        # self.results_table.setAlternatingRowColors(True)
-        # self.results_table.setShowGrid(False)
-        # self.results_table.setSortingEnabled(True)
-        # self.results_table.verticalHeader().setVisible(False)
-        # self.results_table.verticalHeader().setDefaultSectionSize(25)
-
-        # self.results_table.setVerticalScrollBarPolicy(
-        #     Qt.ScrollBarAsNeeded
-        # )
-
-        # self.results_table.setHorizontalScrollBarPolicy(
-        #     Qt.ScrollBarAsNeeded
-        # )
-
-        # self.results_table.setSelectionBehavior(
-        #     QTableWidget.SelectRows
-        # )
-
-        # self.results_table.setSelectionMode(
-        #     QTableWidget.MultiSelection
-        # )
-
-        # header = self.results_table.horizontalHeader()
-
-        # header.setStretchLastSection(True)
-
-        # header.setSectionResizeMode(
-        #     0,
-        #     QHeaderView.ResizeToContents
-        # )
-
-        # header.setSectionResizeMode(
-        #     1,
-        #     QHeaderView.ResizeToContents
-        # )
-
-        # header.setSectionResizeMode(
-        #     2,
-        #     QHeaderView.ResizeToContents
-        # )
-
-        # header.setSectionResizeMode(
-        #     3,
-        #     QHeaderView.Stretch
-        # )
-
-        # # Summary Label
-        # self.summary_label = QLabel(
-        #     "Matches: 0 | CSV Files: 0"
-        # )
-
-        # # Dashboard Area
-        # dashboard_layout = QHBoxLayout()
-
-        # self.ub3_card = DashboardCard("UB3 Found")
-        # self.records_card = DashboardCard("Records")
-        # self.balance_card = DashboardCard("Balance")
-        # self.risk_card = DashboardCard("Risk")
-
-        # dashboard_layout.addWidget(self.ub3_card)
-        # dashboard_layout.addWidget(self.records_card)
-        # dashboard_layout.addWidget(self.balance_card)
-        # dashboard_layout.addWidget(self.risk_card)
-
-        # # Card layout
-        # card_layout.addWidget(self.folder_label)
-        # card_layout.addWidget(browse_btn)
-        # card_layout.addWidget(self.customer_input)
-        # card_layout.addWidget(self.search_btn)
-        # card_layout.addLayout(dashboard_layout)
-        # card_layout.addWidget(
-        #     self.results_table,
-        #     stretch=1
-        # )
-        # card_layout.addWidget(self.summary_label)
-        # card_layout.addWidget(self.status_label)
-        # card_layout.addLayout(buttons_layout)
-
-        # card.setLayout(card_layout)
-
-        # main_layout.addWidget(title)
-        # main_layout.addWidget(card)
-
-        # self.setLayout(main_layout)
+        self.setLayout(main_layout)
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(
@@ -258,93 +84,105 @@ class MainWindow(QWidget):
 
         if folder:
             self.folder_path = folder
-            self.folder_label.setText(f"Root Folder: {folder}")
+            self.search_tab.folder_label.setText(f"Root Folder: {folder}")
 
     def styles(self):
         return """
+        
         QWidget {
-            background-color: #F8F9FA;
+            background: #F5F7FA;
+            color: #1E293B;
             font-family: Segoe UI;
-            font-size: 14px;
-            color: #111827;
-        }
-
-        #title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #0F172A;
-            margin-bottom: 10px;
-        }
-
-        #card {
-            background-color: white;
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid #E5E7EB;
+            font-size: 13px;
         }
 
         QLabel {
+            color: #1E293B;
+        }
+
+        #appTitle {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0F172A;
+            padding: 10px;
+        }
+
+        QTabWidget::pane {
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            background: white;
+            top: -1px;
+        }
+
+        QTabBar::tab {
+            background: #E5E7EB;
+            color: #475569;
+            min-width: 130px;
+            padding: 12px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            margin-right: 2px;
+        }
+
+        QTabBar::tab:selected {
+            background: #F58220;
+            color: white;
+            font-weight: bold;
+        }
+
+        QTabBar::tab:hover {
+            background: #FDBA74;
             color: #111827;
-            font-weight: 500;
+        }
+
+        QPushButton {
+            background: #F58220;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: bold;
+        }
+
+        QPushButton:hover {
+            background: #EA6D0B;
+        }
+
+        QPushButton:pressed {
+            background: #C85600;
         }
 
         QLineEdit {
-            padding: 12px;
-            border: 2px solid #D1D5DB;
+            border: 2px solid #CBD5E1;
             border-radius: 8px;
-            color: #000000;
-            background-color: white;
+            padding: 10px;
+            background: white;
         }
 
         QLineEdit:focus {
             border: 2px solid #F58220;
         }
 
-        QPushButton {
-            background-color: #F58220;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            min-height: 18px;
-        }
-
-        QPushButton:hover {
-            background-color: #E67310;
-        }
-
-        QPushButton:pressed {
-            background-color: #D46008;
-        }
-
         QTableWidget {
-            background-color: white;
-            border: 1px solid #E5E7EB;
+            border: 1px solid #E2E8F0;
             border-radius: 10px;
-            alternate-background-color: #F9FAFB;
+            background: white;
+            alternate-background-color: #F8FAFC;
             selection-background-color: #F58220;
             selection-color: white;
-            gridline-color: transparent;
-            padding: 5px;
         }
 
         QHeaderView::section {
-            background-color: #0F172A;
+            background: #0F172A;
             color: white;
+            padding: 8px;
+            border: none;
             font-weight: bold;
-            border: none;
-            padding: 10px;
-            min-height: 35px;
-        }
-
-        QTableCornerButton::section {
-            background-color: #0F172A;
-            border: none;
         }
 
         QScrollBar:vertical {
             width: 10px;
-            border: none;
+            background: transparent;
         }
 
         QScrollBar::handle:vertical {
@@ -354,6 +192,19 @@ class MainWindow(QWidget):
 
         QScrollBar::handle:vertical:hover {
             background: #94A3B8;
+        }
+
+        #dashboardCard {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            min-height: 110px;
+        }
+
+        #cardValue {
+            font-size: 26px;
+            font-weight: bold;
+            color: #F58220;
         }
         """
 
@@ -368,7 +219,7 @@ class MainWindow(QWidget):
         if tooltip:
             item.setToolTip(str(value))
 
-        self.results_table.setItem(
+        self.search_tab.results_table.setItem(
             row,
             col,
             item
@@ -376,19 +227,19 @@ class MainWindow(QWidget):
 
     def search_customer(self):
 
-        customer_id = self.customer_input.text().strip()
+        customer_id = self.search_tab.customer_input.text().strip()
 
         if not self.folder_path or not customer_id:
-            self.folder_label.setText("Select folder and enter Customer ID")
+            self.search_tab.folder_label.setText("Select folder and enter Customer ID")
             return
 
         results = find_customer_recursive(self.folder_path, customer_id)
 
         if not results:
-            self.folder_label.setText("No customer found")
+            self.search_tab.folder_label.setText("No customer found")
             return
 
-        self.results_table.setRowCount(
+        self.self.search_tab.results_table.setRowCount(
             len(results)
         )
 
@@ -427,15 +278,15 @@ class MainWindow(QWidget):
                 tooltip=True
             )
 
-        self.summary_label.setText(
+        self.search_tab.summary_label.setText(
             f"Matches: {len(results)} | CSV Files: {total_csv}"
         )
 
-        # self.results_table.resizeRowsToContents()
+        self.search_tab.results_table.resizeRowsToContents()
 
-        self.results_table.resizeColumnsToContents()
+        self.search_tab.results_table.resizeColumnsToContents()
 
-        self.results_table.setColumnWidth(
+        self.search_tab.results_table.setColumnWidth(
             3,
             550
         )
@@ -445,11 +296,11 @@ class MainWindow(QWidget):
     def analyze_selected(self):
         selected_rows = set()
 
-        for item in self.results_table.selectedItems():
+        for item in self.search_tab.results_table.selectedItems():
             selected_rows.add(item.row())
 
         if not selected_rows:
-            self.status_label.setText(
+            self.search_tab.status_label.setText(
                 "No rows selected"
             )
             return
@@ -476,7 +327,7 @@ class MainWindow(QWidget):
 
     def run_analysis(self, selected_results):
 
-        self.status_label.setText(
+        self.search_tab.status_label.setText(
             "Analyzing..."
         )
 
@@ -525,7 +376,7 @@ class MainWindow(QWidget):
         
         if df is None:
 
-            self.status_label.setText(
+            self.search_tab.status_label.setText(
                 "No CSV data found"
             )
 
@@ -541,7 +392,7 @@ class MainWindow(QWidget):
             output_file
         )
 
-        self.status_label.setText(
+        self.search_tab.status_label.setText(
             f"Completed | Records: {len(df)}"
         )
 

@@ -1,4 +1,8 @@
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
+from PySide6.QtWidgets import (
+    QFrame,
+    QLabel,
+    QVBoxLayout
+)
 from PySide6.QtCore import Qt
 
 
@@ -14,7 +18,7 @@ class DashboardCard(QFrame):
         self.title_label = QLabel(title)
         self.title_label.setAlignment(Qt.AlignCenter)
 
-        self.value_label = QLabel(str(value))
+        self.value_label = QLabel(value)
         self.value_label.setAlignment(Qt.AlignCenter)
 
         self.value_label.setObjectName("cardValue")
