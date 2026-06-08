@@ -1,19 +1,23 @@
 import os
 from datetime import datetime
+
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton, QLineEdit,
     QFileDialog, QVBoxLayout, QFrame, QApplication,
     QHBoxLayout, QTableWidget, QTableWidgetItem,
-     QHeaderView, QScrollArea, QTabWidget, QCheckBox
+     QHeaderView, QScrollArea, QTabWidget, QCheckBox,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
+
 from core.customer_finder import find_customer_recursive
 from core.csv_merger import merge_customer_data, export_excel
-from ui.widgets.dashboard_card import DashboardCard
+from core.analysis_session import AnalysisSession
 
+from ui.widgets.dashboard_card import DashboardCard
 from ui.tabs.dashboard_tab import DashboardTab
 from ui.tabs.search_tab import SearchTab
+from ui.tabs.timeline_tab import TimelineTab
 
 
 class MainWindow(QWidget):
@@ -29,6 +33,7 @@ class MainWindow(QWidget):
         self.search_btn = None
 
         self.setStyleSheet(self.styles())
+        self.session = AnalysisSession()
 
         self.build_ui()
 
@@ -65,10 +70,11 @@ class MainWindow(QWidget):
 
         # Dashboard tab
         self.dashboard_tab = DashboardTab()
+        self.timeline_tab = TimelineTab()
 
         self.tabs.addTab(self.search_tab, "Search")
         self.tabs.addTab(self.dashboard_tab, "Dashboard")
-        self.tabs.addTab(QWidget(), "Timeline")
+        self.tabs.addTab(self.timeline_tab,"Timeline")
         self.tabs.addTab(QWidget(), "Fraud")
         self.tabs.addTab(QWidget(), "Raw Data")
         self.tabs.addTab(QWidget(), "Export")
@@ -386,6 +392,13 @@ class MainWindow(QWidget):
                 "No CSV data found"
             )
             return
+        
+        self.session.df = df
+        self.session.selected_results = selected_results
+        self.session.ub3_count = len(
+            selected_results
+        )
+        self.session.record_count = len(df)
 
         from core.analytics import (
             balance_summary
@@ -396,8 +409,11 @@ class MainWindow(QWidget):
         )
 
         balance = balance_summary(df)
-
         risk_score, flags = calculate_risk(df)
+
+        self.session.balance_summary = balance
+        self.session.risk_score = risk_score
+        self.session.flags = flags
 
         self.dashboard_tab.ub3_card.update_value(
             len(selected_results)
@@ -419,6 +435,8 @@ class MainWindow(QWidget):
 
         else:
             risk_text = "HIGH"
+        
+        self.session.risk_level = risk_text
 
         self.dashboard_tab.risk_card.update_value(
             risk_text
@@ -436,12 +454,12 @@ class MainWindow(QWidget):
         )
 
         os.makedirs(
-            export_folder,
+            exports_folder,
             exist_ok=True
         )
 
         output_file = os.path.join(
-            export_folder,
+            exports_folder,
             f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         )
 
@@ -453,6 +471,7 @@ class MainWindow(QWidget):
         self.search_tab.status_label.setText(
             f"Completed | Records: {len(df)} | Saved: {os.path.basename(output_file)}"
         )
+        self.load_timeline()
 
     def add_checkbox(self, row):
         checkbox = QCheckBox()
@@ -538,3 +557,43 @@ class MainWindow(QWidget):
             checkbox.setChecked(
                 not checkbox.isChecked()
             )
+
+    def load_timeline(self):
+
+        df = self.session.df
+
+        if df is None:
+            return
+
+        timeline_df = df[
+            [
+                "Date",
+                "Time",
+                "Operation",
+                "Payment",
+                "Balance",
+                "S/N"
+            ]
+        ]
+
+        table = self.timeline_tab.table
+
+        table.setRowCount(
+            len(timeline_df)
+        )
+
+        for row, data in enumerate(
+            timeline_df.values
+        ):
+
+            for col, value in enumerate(data):
+
+                item = QTableWidgetItem(
+                    str(value)
+                )
+
+                table.setItem(
+                    row,
+                    col,
+                    item
+                )
