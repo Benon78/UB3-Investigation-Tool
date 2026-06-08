@@ -18,6 +18,7 @@ from ui.widgets.dashboard_card import DashboardCard
 from ui.tabs.dashboard_tab import DashboardTab
 from ui.tabs.search_tab import SearchTab
 from ui.tabs.timeline_tab import TimelineTab
+from ui.tabs.fraud_tab import FraudTab
 
 
 class MainWindow(QWidget):
@@ -71,11 +72,12 @@ class MainWindow(QWidget):
         # Dashboard tab
         self.dashboard_tab = DashboardTab()
         self.timeline_tab = TimelineTab()
+        self.fraud_tab = FraudTab()
 
         self.tabs.addTab(self.search_tab, "Search")
         self.tabs.addTab(self.dashboard_tab, "Dashboard")
         self.tabs.addTab(self.timeline_tab,"Timeline")
-        self.tabs.addTab(QWidget(), "Fraud")
+        self.tabs.addTab( self.fraud_tab,"Fraud")
         self.tabs.addTab(QWidget(), "Raw Data")
         self.tabs.addTab(QWidget(), "Export")
 
@@ -427,14 +429,17 @@ class MainWindow(QWidget):
             balance["current"]
         )
 
-        if risk_score <= 20:
+        if risk_score < 20:
             risk_text = "LOW"
 
-        elif risk_score <= 50:
+        elif risk_score < 50:
             risk_text = "MEDIUM"
 
-        else:
+        elif risk_score < 80:
             risk_text = "HIGH"
+
+        else:
+            risk_text = "CRITICAL"
         
         self.session.risk_level = risk_text
 
@@ -471,7 +476,9 @@ class MainWindow(QWidget):
         self.search_tab.status_label.setText(
             f"Completed | Records: {len(df)} | Saved: {os.path.basename(output_file)}"
         )
+
         self.load_timeline()
+        self.load_fraud_tab()
 
     def add_checkbox(self, row):
         checkbox = QCheckBox()
@@ -597,3 +604,27 @@ class MainWindow(QWidget):
                     col,
                     item
                 )
+
+    def load_fraud_tab(self):
+
+        self.fraud_tab.flags_list.clear()
+
+        self.fraud_tab.risk_label.setText(
+            f"Risk Level: {self.session.risk_level}"
+        )
+
+        for flag in self.session.flags:
+
+            self.fraud_tab.flags_list.addItem(
+                str(flag)
+            )
+
+
+
+
+
+
+
+
+
+

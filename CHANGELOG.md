@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0] - 2026-06-08
+
+### Added
+- Fraud Investigation tab
+- Advanced UB3 fraud detection rules
+- Risk severity levels (LOW, MEDIUM, HIGH, CRITICAL)
+- Detection for:
+  - High Unlock Failure Rate
+  - Passcode Abuse
+  - Abnormal Reboots
+  - Low Balance Unlock Attempts
+  - Repeated Unlocks on Already-Unlocked Lanterns
+  - Unlock Failure + Reboot patterns
+  - Passcode Failure + Low Balance patterns
+
+### Improved
+- Fraud scoring accuracy
+- Investigation workflow
+- Risk visibility in Dashboard
+
 ## [0.2.0] - 2026-06-08
 
 ### Added
