@@ -3,12 +3,15 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton, QLineEdit,
     QFileDialog, QVBoxLayout, QFrame, QApplication,
-    QHBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea
+    QHBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QScrollArea, QTabWidget
 )
 from PySide6.QtCore import Qt
 from core.customer_finder import find_customer_recursive
 from core.csv_merger import merge_customer_data, export_excel
-from ui.dashboard_widgets import DashboardCard
+from ui.widgets.dashboard_card import DashboardCard
+
+from ui.tabs.dashboard_tab import DashboardTab
+from ui.tabs.search_tab import SearchTab
 
 
 class MainWindow(QWidget):
@@ -30,180 +33,222 @@ class MainWindow(QWidget):
     def build_ui(self):
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(30, 30, 30, 30)
-        main_layout.setSpacing(20)
 
-        # Title
-        title = QLabel("UB3 CUSTOMER ANALYZER")
-        title.setObjectName("title")
-        title.setAlignment(Qt.AlignCenter)
-
-        # Card container
-        card = QFrame()
-        card.setObjectName("card")
-
-        card_layout = QVBoxLayout()
-        card_layout.setSpacing(15)
-
-        # Folder
-        self.folder_label = QLabel("Root Folder: Not selected")
-        self.folder_label.setStyleSheet("""
-            color: #F58220;
-            font-weight: bold;
-            background-color: #FFF7ED;
-            padding: 8px;
-            border-radius: 6px;
-        """)
-
-        browse_btn = QPushButton("Browse Folder")
-        browse_btn.clicked.connect(self.select_folder)
-
-        # Status label
-        self.status_label = QLabel("Ready")
-        self.status_label.setStyleSheet("""
-            color: #0F172A;
-            font-weight: bold;
-            background-color: #FFF7ED;
-            padding: 8px;
-            border-radius: 6px;
-        """)
-
-        # Customer ID input
-        self.customer_input = QLineEdit()
-        self.customer_input.setPlaceholderText("Enter Customer ID e.g. 33883")
-
-        # Search button
-        self.search_btn = QPushButton("Find Customer")
-        self.search_btn.setObjectName("primaryBtn")
-        self.search_btn.clicked.connect(self.search_customer)
-        self.search_btn.setCursor(Qt.PointingHandCursor)
-        browse_btn.setCursor(Qt.PointingHandCursor)
-
-        # Analyze button
-        buttons_layout = QHBoxLayout()
-        self.analyze_selected_btn = QPushButton(
-            "Analyze Selected"
+        title = QLabel(
+            "UB3 CUSTOMER ANALYZER"
         )
 
-        self.analyze_all_btn = QPushButton(
-            "Analyze All"
+        title.setObjectName(
+            "title"
         )
 
-        buttons_layout.addWidget(
-            self.analyze_selected_btn
+        title.setAlignment(
+            Qt.AlignCenter
         )
 
-        buttons_layout.addWidget(
-            self.analyze_all_btn
-        )
-        self.analyze_all_btn.setCursor(Qt.PointingHandCursor)
-        self.analyze_selected_btn.setCursor(Qt.PointingHandCursor)
-        browse_btn.setCursor(Qt.PointingHandCursor)
+        self.tabs = QTabWidget()
 
-        self.analyze_selected_btn.clicked.connect(
-            self.analyze_selected
-        )
+        self.search_tab = SearchTab()
 
-        self.analyze_all_btn.clicked.connect(
-            self.analyze_all
+        self.dashboard_tab = DashboardTab()
+
+        self.tabs.addTab(
+            self.search_tab,
+            "Search"
         )
 
-        # Results Table
-        self.results_table = QTableWidget()
-        self.results_table.setColumnCount(4)
-        self.results_table.setMinimumHeight(350)
-
-        self.results_table.setHorizontalHeaderLabels([
-            "UB3 Serial Number",
-            "Customer ID",
-            "CSV Files",
-            "Folder Path"
-        ])
-
-        self.results_table.setAlternatingRowColors(True)
-        self.results_table.setShowGrid(False)
-        self.results_table.setSortingEnabled(True)
-        self.results_table.verticalHeader().setVisible(False)
-        self.results_table.verticalHeader().setDefaultSectionSize(25)
-
-        self.results_table.setVerticalScrollBarPolicy(
-            Qt.ScrollBarAsNeeded
+        self.tabs.addTab(
+            self.dashboard_tab,
+            "Dashboard"
         )
 
-        self.results_table.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarAsNeeded
+        main_layout.addWidget(
+            title
         )
 
-        self.results_table.setSelectionBehavior(
-            QTableWidget.SelectRows
+        main_layout.addWidget(
+            self.tabs
         )
 
-        self.results_table.setSelectionMode(
-            QTableWidget.MultiSelection
+        self.setLayout(
+            main_layout
         )
 
-        header = self.results_table.horizontalHeader()
+        # main_layout = QVBoxLayout()
+        # main_layout.setContentsMargins(30, 30, 30, 30)
+        # main_layout.setSpacing(20)
 
-        header.setStretchLastSection(True)
+        # # Title
+        # title = QLabel("UB3 CUSTOMER ANALYZER")
+        # title.setObjectName("title")
+        # title.setAlignment(Qt.AlignCenter)
 
-        header.setSectionResizeMode(
-            0,
-            QHeaderView.ResizeToContents
-        )
+        # # Card container
+        # card = QFrame()
+        # card.setObjectName("card")
 
-        header.setSectionResizeMode(
-            1,
-            QHeaderView.ResizeToContents
-        )
+        # card_layout = QVBoxLayout()
+        # card_layout.setSpacing(15)
 
-        header.setSectionResizeMode(
-            2,
-            QHeaderView.ResizeToContents
-        )
+        # # Folder
+        # self.folder_label = QLabel("Root Folder: Not selected")
+        # self.folder_label.setStyleSheet("""
+        #     color: #F58220;
+        #     font-weight: bold;
+        #     background-color: #FFF7ED;
+        #     padding: 8px;
+        #     border-radius: 6px;
+        # """)
 
-        header.setSectionResizeMode(
-            3,
-            QHeaderView.Stretch
-        )
+        # browse_btn = QPushButton("Browse Folder")
+        # browse_btn.clicked.connect(self.select_folder)
 
-        # Summary Label
+        # # Status label
+        # self.status_label = QLabel("Ready")
+        # self.status_label.setStyleSheet("""
+        #     color: #0F172A;
+        #     font-weight: bold;
+        #     background-color: #FFF7ED;
+        #     padding: 8px;
+        #     border-radius: 6px;
+        # """)
+
+        # # Customer ID input
+        # self.customer_input = QLineEdit()
+        # self.customer_input.setPlaceholderText("Enter Customer ID e.g. 33883")
+
+        # # Search button
+        # self.search_btn = QPushButton("Find Customer")
+        # self.search_btn.setObjectName("primaryBtn")
+        # self.search_btn.clicked.connect(self.search_customer)
+        # self.search_btn.setCursor(Qt.PointingHandCursor)
+        # browse_btn.setCursor(Qt.PointingHandCursor)
+
+        # # Analyze button
+        # buttons_layout = QHBoxLayout()
+        # self.analyze_selected_btn = QPushButton(
+        #     "Analyze Selected"
+        # )
+
+        # self.analyze_all_btn = QPushButton(
+        #     "Analyze All"
+        # )
+
+        # buttons_layout.addWidget(
+        #     self.analyze_selected_btn
+        # )
+
+        # buttons_layout.addWidget(
+        #     self.analyze_all_btn
+        # )
+        # self.analyze_all_btn.setCursor(Qt.PointingHandCursor)
+        # self.analyze_selected_btn.setCursor(Qt.PointingHandCursor)
+        # browse_btn.setCursor(Qt.PointingHandCursor)
+
+        # self.analyze_selected_btn.clicked.connect(
+        #     self.analyze_selected
+        # )
+
+        # self.analyze_all_btn.clicked.connect(
+        #     self.analyze_all
+        # )
+
+        # # Results Table
+        # self.results_table = QTableWidget()
+        # self.results_table.setColumnCount(4)
+        # self.results_table.setMinimumHeight(350)
+
+        # self.results_table.setHorizontalHeaderLabels([
+        #     "UB3 Serial Number",
+        #     "Customer ID",
+        #     "CSV Files",
+        #     "Folder Path"
+        # ])
+
+        # self.results_table.setAlternatingRowColors(True)
+        # self.results_table.setShowGrid(False)
+        # self.results_table.setSortingEnabled(True)
+        # self.results_table.verticalHeader().setVisible(False)
+        # self.results_table.verticalHeader().setDefaultSectionSize(25)
+
+        # self.results_table.setVerticalScrollBarPolicy(
+        #     Qt.ScrollBarAsNeeded
+        # )
+
+        # self.results_table.setHorizontalScrollBarPolicy(
+        #     Qt.ScrollBarAsNeeded
+        # )
+
+        # self.results_table.setSelectionBehavior(
+        #     QTableWidget.SelectRows
+        # )
+
+        # self.results_table.setSelectionMode(
+        #     QTableWidget.MultiSelection
+        # )
+
+        # header = self.results_table.horizontalHeader()
+
+        # header.setStretchLastSection(True)
+
+        # header.setSectionResizeMode(
+        #     0,
+        #     QHeaderView.ResizeToContents
+        # )
+
+        # header.setSectionResizeMode(
+        #     1,
+        #     QHeaderView.ResizeToContents
+        # )
+
+        # header.setSectionResizeMode(
+        #     2,
+        #     QHeaderView.ResizeToContents
+        # )
+
+        # header.setSectionResizeMode(
+        #     3,
+        #     QHeaderView.Stretch
+        # )
+
+        # # Summary Label
         # self.summary_label = QLabel(
         #     "Matches: 0 | CSV Files: 0"
         # )
 
-        # Dashboard Area
-        dashboard_layout = QHBoxLayout()
+        # # Dashboard Area
+        # dashboard_layout = QHBoxLayout()
 
-        self.ub3_card = DashboardCard("UB3 Found")
-        self.records_card = DashboardCard("Records")
-        self.balance_card = DashboardCard("Balance")
-        self.risk_card = DashboardCard("Risk")
+        # self.ub3_card = DashboardCard("UB3 Found")
+        # self.records_card = DashboardCard("Records")
+        # self.balance_card = DashboardCard("Balance")
+        # self.risk_card = DashboardCard("Risk")
 
-        dashboard_layout.addWidget(self.ub3_card)
-        dashboard_layout.addWidget(self.records_card)
-        dashboard_layout.addWidget(self.balance_card)
-        dashboard_layout.addWidget(self.risk_card)
+        # dashboard_layout.addWidget(self.ub3_card)
+        # dashboard_layout.addWidget(self.records_card)
+        # dashboard_layout.addWidget(self.balance_card)
+        # dashboard_layout.addWidget(self.risk_card)
 
-        # Card layout
-        card_layout.addWidget(self.folder_label)
-        card_layout.addWidget(browse_btn)
-        card_layout.addWidget(self.customer_input)
-        card_layout.addWidget(self.search_btn)
-        card_layout.addLayout(dashboard_layout)
-        card_layout.addWidget(
-            self.results_table,
-            stretch=1
-        )
+        # # Card layout
+        # card_layout.addWidget(self.folder_label)
+        # card_layout.addWidget(browse_btn)
+        # card_layout.addWidget(self.customer_input)
+        # card_layout.addWidget(self.search_btn)
+        # card_layout.addLayout(dashboard_layout)
+        # card_layout.addWidget(
+        #     self.results_table,
+        #     stretch=1
+        # )
         # card_layout.addWidget(self.summary_label)
-        card_layout.addWidget(self.status_label)
-        card_layout.addLayout(buttons_layout)
+        # card_layout.addWidget(self.status_label)
+        # card_layout.addLayout(buttons_layout)
 
-        card.setLayout(card_layout)
+        # card.setLayout(card_layout)
 
-        main_layout.addWidget(title)
-        main_layout.addWidget(card)
+        # main_layout.addWidget(title)
+        # main_layout.addWidget(card)
 
-        self.setLayout(main_layout)
+        # self.setLayout(main_layout)
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(
@@ -382,9 +427,9 @@ class MainWindow(QWidget):
                 tooltip=True
             )
 
-        # self.summary_label.setText(
-        #     f"Matches: {len(results)} | CSV Files: {total_csv}"
-        # )
+        self.summary_label.setText(
+            f"Matches: {len(results)} | CSV Files: {total_csv}"
+        )
 
         # self.results_table.resizeRowsToContents()
 
