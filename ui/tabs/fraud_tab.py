@@ -6,7 +6,8 @@ from PySide6.QtWidgets import (
     QListWidget,
     QTableWidget,
     QHeaderView,
-    QTabWidget
+    QScrollArea,
+    QFrame
 )
 
 from ui.widgets.dashboard_card import DashboardCard
@@ -18,44 +19,50 @@ class FraudTab(QWidget):
         super().__init__()
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(15)
 
-        # ==========================================
-        # Title
-        # ==========================================
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+
+        container = QWidget()
+
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+
+        # =====================================
+        # TITLE
+        # =====================================
 
         title = QLabel(
             "Fraud Investigation Center"
         )
 
         title.setStyleSheet("""
-            font-size: 24px;
-            font-weight: bold;
-            color: #0F172A;
+            font-size:24px;
+            font-weight:bold;
+            color:#0F172A;
         """)
 
-        # ==========================================
-        # Summary Banner
-        # ==========================================
+        # =====================================
+        # SUMMARY BANNER
+        # =====================================
 
         self.summary_label = QLabel(
             "No Analysis Loaded"
         )
 
         self.summary_label.setStyleSheet("""
-            background-color: #FFF7ED;
-            border: 1px solid #FED7AA;
-            border-radius: 10px;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #9A3412;
+            background:#FFF7ED;
+            border:1px solid #FED7AA;
+            border-radius:10px;
+            padding:12px;
+            font-weight:bold;
+            color:#9A3412;
         """)
 
-        # ==========================================
-        # Dashboard Cards
-        # ==========================================
+        # =====================================
+        # KPI CARDS
+        # =====================================
 
         cards_layout = QHBoxLayout()
 
@@ -68,227 +75,258 @@ class FraudTab(QWidget):
         )
 
         self.flags_card = DashboardCard(
-            "Flags Found"
+            "Flags"
         )
 
         self.operations_card = DashboardCard(
             "Suspicious Ops"
         )
 
-        cards_layout.addWidget(
-            self.score_card
+        cards_layout.addWidget(self.score_card)
+        cards_layout.addWidget(self.level_card)
+        cards_layout.addWidget(self.flags_card)
+        cards_layout.addWidget(self.operations_card)
+
+        # =====================================
+        # RISK MATRIX
+        # =====================================
+
+        risk_frame = QFrame()
+
+        risk_layout = QVBoxLayout()
+
+        risk_title = QLabel(
+            "Risk Matrix"
         )
 
-        cards_layout.addWidget(
-            self.level_card
-        )
-
-        cards_layout.addWidget(
-            self.flags_card
-        )
-
-        cards_layout.addWidget(
-            self.operations_card
-        )
-
-        # ==========================================
-        # Internal Fraud Tabs
-        # ==========================================
-
-        self.fraud_tabs = QTabWidget()
-
-        # ==========================================
-        # Summary Tab
-        # ==========================================
-
-        summary_tab = QWidget()
-
-        summary_layout = QVBoxLayout()
-
-        self.summary_details = QLabel(
-            "Run an analysis to view fraud insights."
-        )
-
-        self.summary_details.setWordWrap(True)
-
-        self.summary_details.setStyleSheet("""
-            font-size: 14px;
-            padding: 15px;
-            background: white;
-            border: 1px solid #E2E8F0;
-            border-radius: 10px;
+        risk_title.setStyleSheet("""
+            font-size:18px;
+            font-weight:bold;
         """)
 
-        summary_layout.addWidget(
-            self.summary_details
-        )
+        self.risk_matrix_table = QTableWidget()
 
-        summary_layout.addStretch()
+        self.risk_matrix_table.setColumnCount(2)
 
-        summary_tab.setLayout(
-            summary_layout
-        )
-
-        # ==========================================
-        # Alerts Tab
-        # ==========================================
-
-        alerts_tab = QWidget()
-
-        alerts_layout = QVBoxLayout()
-
-        self.flags_list = QListWidget()
-
-        self.flags_list.setStyleSheet("""
-            QListWidget {
-                border: 1px solid #E2E8F0;
-                border-radius: 10px;
-                background: white;
-                padding: 8px;
-            }
-
-            QListWidget::item {
-                background: #FFF7ED;
-                border: 1px solid #FED7AA;
-                border-radius: 8px;
-                margin: 4px;
-                padding: 12px;
-                color: #9A3412;
-                font-weight: bold;
-            }
-        """)
-
-        alerts_layout.addWidget(
-            self.flags_list
-        )
-
-        alerts_tab.setLayout(
-            alerts_layout
-        )
-
-        # ==========================================
-        # Operations Tab
-        # ==========================================
-
-        operations_tab = QWidget()
-
-        operations_layout = QVBoxLayout()
-
-        self.operations_table = QTableWidget()
-
-        self.operations_table.setColumnCount(2)
-
-        self.operations_table.setHorizontalHeaderLabels([
-            "Operation",
+        self.risk_matrix_table.setHorizontalHeaderLabels([
+            "Indicator",
             "Count"
         ])
 
-        self.operations_table.horizontalHeader().setSectionResizeMode(
+        self.risk_matrix_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.Stretch
         )
 
-        self.operations_table.verticalHeader().setVisible(
+        self.risk_matrix_table.verticalHeader().setVisible(
             False
         )
 
-        self.operations_table.setAlternatingRowColors(
+        risk_layout.addWidget(
+            risk_title
+        )
+
+        risk_layout.addWidget(
+            self.risk_matrix_table
+        )
+
+        risk_frame.setLayout(
+            risk_layout
+        )
+
+        # =====================================
+        # SUSPICIOUS LANTERNS
+        # =====================================
+
+        lantern_frame = QFrame()
+
+        lantern_layout = QVBoxLayout()
+
+        lantern_title = QLabel(
+            "Suspicious Lanterns"
+        )
+
+        lantern_title.setStyleSheet("""
+            font-size:18px;
+            font-weight:bold;
+        """)
+
+        self.suspicious_lanterns = QListWidget()
+
+        lantern_layout.addWidget(
+            lantern_title
+        )
+
+        lantern_layout.addWidget(
+            self.suspicious_lanterns
+        )
+
+        lantern_frame.setLayout(
+            lantern_layout
+        )
+
+        # =====================================
+        # TOP SECTION
+        # =====================================
+
+        top_layout = QHBoxLayout()
+
+        top_layout.addWidget(
+            risk_frame,
+            2
+        )
+
+        top_layout.addWidget(
+            lantern_frame,
+            1
+        )
+
+        # =====================================
+        # SUSPICIOUS EVENTS
+        # =====================================
+
+        events_title = QLabel(
+            "Suspicious Timeline"
+        )
+
+        events_title.setStyleSheet("""
+            font-size:18px;
+            font-weight:bold;
+        """)
+
+        self.suspicious_events_table = QTableWidget()
+
+        self.suspicious_events_table.setColumnCount(4)
+
+        self.suspicious_events_table.setHorizontalHeaderLabels([
+            "Date",
+            "Time",
+            "Operation",
+            "S/N"
+        ])
+
+        self.suspicious_events_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch
+        )
+
+        # =====================================
+        # FLAGS
+        # =====================================
+
+        flags_title = QLabel(
+            "Fraud Indicators"
+        )
+
+        flags_title.setStyleSheet("""
+            font-size:18px;
+            font-weight:bold;
+        """)
+
+        self.flags_list = QListWidget()
+
+        # =====================================
+        # VERDICT
+        # =====================================
+
+        verdict_title = QLabel(
+            "Investigation Verdict"
+        )
+
+        verdict_title.setStyleSheet("""
+            font-size:18px;
+            font-weight:bold;
+        """)
+
+        self.verdict_label = QLabel(
+            "No analysis loaded."
+        )
+
+        self.verdict_label.setWordWrap(
             True
         )
 
-        operations_layout.addWidget(
-            self.operations_table
+        self.verdict_label.setStyleSheet("""
+            background:white;
+            border:1px solid #E2E8F0;
+            border-radius:10px;
+            padding:15px;
+            font-size:14px;
+        """)
+
+        # =====================================
+        # ACTIONS
+        # =====================================
+
+        actions_title = QLabel(
+            "Recommended Actions"
         )
 
-        operations_tab.setLayout(
-            operations_layout
-        )
-
-        self.operations_table.setSortingEnabled(True)
-
-        self.operations_table.setSelectionBehavior(
-            QTableWidget.SelectRows
-        )
-
-        self.operations_table.setEditTriggers(
-            QTableWidget.NoEditTriggers
-        )
-
-        # ==========================================
-        # Recommendations Tab
-        # ==========================================
-
-        recommendations_tab = QWidget()
-
-        recommendations_layout = QVBoxLayout()
+        actions_title.setStyleSheet("""
+            font-size:18px;
+            font-weight:bold;
+        """)
 
         self.actions_list = QListWidget()
 
-        self.actions_list.setStyleSheet("""
-            QListWidget {
-                border: 1px solid #D1FAE5;
-                background: #ECFDF5;
-                border-radius: 10px;
-                padding: 8px;
-            }
+        # =====================================
+        # BUILD PAGE
+        # =====================================
 
-            QListWidget::item {
-                margin: 4px;
-                padding: 12px;
-                color: #065F46;
-                font-weight: bold;
-            }
-        """)
+        layout.addWidget(title)
 
-        recommendations_layout.addWidget(
-            self.actions_list
-        )
-
-        recommendations_tab.setLayout(
-            recommendations_layout
-        )
-
-        # ==========================================
-        # Add Tabs
-        # ==========================================
-
-        self.fraud_tabs.addTab(
-            summary_tab,
-            "📊 Summary"
-        )
-
-        self.fraud_tabs.addTab(
-            alerts_tab,
-            "🚨 Alerts"
-        )
-
-        self.fraud_tabs.addTab(
-            operations_tab,
-            "📋 Operations"
-        )
-
-        self.fraud_tabs.addTab(
-            recommendations_tab,
-            "📝 Recommendations"
-        )
-
-        # ==========================================
-        # Assemble Layout
-        # ==========================================
-
-        main_layout.addWidget(
-            title
-        )
-
-        main_layout.addWidget(
+        layout.addWidget(
             self.summary_label
         )
 
-        main_layout.addLayout(
+        layout.addLayout(
             cards_layout
         )
 
+        layout.addLayout(
+            top_layout
+        )
+
+        layout.addWidget(
+            events_title
+        )
+
+        layout.addWidget(
+            self.suspicious_events_table
+        )
+
+        layout.addWidget(
+            flags_title
+        )
+
+        layout.addWidget(
+            self.flags_list
+        )
+
+        layout.addWidget(
+            verdict_title
+        )
+
+        layout.addWidget(
+            self.verdict_label
+        )
+
+        layout.addWidget(
+            actions_title
+        )
+
+        layout.addWidget(
+            self.actions_list
+        )
+
+        container.setLayout(
+            layout
+        )
+
+        scroll.setWidget(
+            container
+        )
+
         main_layout.addWidget(
-            self.fraud_tabs
+            scroll
         )
 
         self.setLayout(

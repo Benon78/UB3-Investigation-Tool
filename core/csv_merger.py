@@ -14,12 +14,29 @@ def merge_customer_data(customer_results):
 
     all_data = []
 
+    stats = {
+        "merged_files": 0,
+        "skipped_unlock": 0,
+        "failed_files": 0,
+        "errors": []
+    }
+
     for customer in customer_results:
 
         ub3 = customer["ub3_folder"]
         customer_id = customer["customer_id"]
 
         for file_path in customer["csv_files"]:
+
+            filename = os.path.basename(
+                file_path
+            ).upper()
+
+            if filename.startswith(
+                "UNLOCK"
+            ):
+                stats["skipped_unlock"] += 1
+                continue
 
             try:
                 df = read_csv_safe(file_path)
@@ -37,15 +54,21 @@ def merge_customer_data(customer_results):
                 df["SourceFile"] = os.path.basename(file_path)
 
                 all_data.append(df)
+                stats["merged_files"] += 1
 
             except Exception as e:
-                print(f"Error reading {file_path}: {e}")
+
+                stats["failed_files"] += 1
+
+                stats["errors"].append(
+                    f"{os.path.basename(file_path)} : {str(e)}"
+                )
 
     if not all_data:
-        return None
+        return None, stats
 
     merged_df = pd.concat(all_data, ignore_index=True)
-    return merged_df
+    return merged_df, stats
 
 
 def export_excel(df, output_path):

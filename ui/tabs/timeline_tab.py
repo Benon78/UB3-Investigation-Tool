@@ -46,6 +46,14 @@ class TimelineTab(QWidget):
 
         self.operation_filter = QComboBox()
 
+        self.operation_filter.setMinimumWidth(
+            220
+        )
+
+        self.operation_filter.setEditable(
+            False
+        )
+
         self.operation_filter.addItem(
             "All Operations"
         )

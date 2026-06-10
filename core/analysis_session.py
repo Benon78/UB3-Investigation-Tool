@@ -1,7 +1,6 @@
 class AnalysisSession:
 
     def __init__(self):
-
         self.reset()
 
     def reset(self):
@@ -23,5 +22,21 @@ class AnalysisSession:
         self.flags = []
 
         self.selected_results = []
-        
+
         self.operation_counts = {}
+
+        # ==========================
+        # Fraud Investigation Data
+        # ==========================
+
+        self.risk_matrix = {}
+
+        self.suspicious_lanterns = []
+
+        self.suspicious_events = None
+
+        self.verdict = ""
+
+        self.recommendations = []
+
+        self.lanterns = []

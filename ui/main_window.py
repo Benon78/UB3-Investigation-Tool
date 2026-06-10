@@ -6,10 +6,13 @@ from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton, QLineEdit,
     QFileDialog, QVBoxLayout, QFrame, QApplication,
     QHBoxLayout, QTableWidget, QTableWidgetItem,
-     QHeaderView, QScrollArea, QTabWidget, QCheckBox
+     QHeaderView, QScrollArea, QTabWidget, QCheckBox,
+     QStackedWidget, QMessageBox
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
+from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QIcon
 
 from core.customer_finder import find_customer_recursive
 from core.csv_merger import merge_customer_data, export_excel
@@ -20,6 +23,9 @@ from ui.tabs.dashboard_tab import DashboardTab
 from ui.tabs.search_tab import SearchTab
 from ui.tabs.timeline_tab import TimelineTab
 from ui.tabs.fraud_tab import FraudTab
+from ui.tabs.about_tab import AboutTab
+from ui.tabs.reports_tab import ReportsTab
+from ui.widgets.sidebar import Sidebar
 
 
 class MainWindow(QWidget):
@@ -27,7 +33,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("UB3 Customer Analyzer")
+        self.setWindowTitle("WASSHA UB3 Analyzer v0.6.0")
         self.resize(1280, 800)
         self.setMinimumSize(1100, 700)
 
@@ -44,12 +50,34 @@ class MainWindow(QWidget):
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(10)
 
-        title = QLabel("UB3 CUSTOMER ANALYZER")
-        title.setObjectName("appTitle")
-        title.setAlignment(Qt.AlignCenter)
+        logo = QLabel()
+        pixmap = QPixmap(
+            "assets/logos/wassha_logo_white.png"
+        )
 
-        self.tabs = QTabWidget()
-        self.tabs.setObjectName("mainTabs")
+        logo.setPixmap(
+            pixmap.scaledToHeight(
+                45,
+                Qt.SmoothTransformation
+            )
+        )
+        logo.setMaximumHeight(45)
+
+        title = QLabel(
+            "UB3 CUSTOMER ANALYZER"
+        )
+
+        title.setObjectName("appTitle")
+
+        # Header setting
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(logo)
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+
+        # Sidebar setting
+        self.sidebar = Sidebar()
+        self.pages = QStackedWidget()
 
         # Search tab
         self.search_tab = SearchTab()
@@ -75,13 +103,37 @@ class MainWindow(QWidget):
         self.dashboard_tab = DashboardTab()
         self.timeline_tab = TimelineTab()
         self.fraud_tab = FraudTab()
+        self.reports_tab = ReportsTab()
+        self.about_tab = AboutTab()
+        self.rawdata_tab = QWidget()
 
-        self.tabs.addTab(self.search_tab, "Search")
-        self.tabs.addTab(self.dashboard_tab, "Dashboard")
-        self.tabs.addTab(self.timeline_tab,"Timeline")
-        self.tabs.addTab( self.fraud_tab,"Fraud")
-        self.tabs.addTab(QWidget(), "Raw Data")
-        self.tabs.addTab(QWidget(), "Export")
+        self.pages.addWidget(
+            self.search_tab
+        )
+
+        self.pages.addWidget(
+            self.dashboard_tab
+        )
+
+        self.pages.addWidget(
+            self.timeline_tab
+        )
+
+        self.pages.addWidget(
+            self.fraud_tab
+        )
+
+        self.pages.addWidget(
+            self.rawdata_tab
+        )
+
+        self.pages.addWidget(
+            self.reports_tab
+        )
+
+        self.pages.addWidget(
+            self.about_tab
+        )
 
         self.timeline_tab.filter_btn.clicked.connect(
             self.filter_timeline
@@ -94,8 +146,77 @@ class MainWindow(QWidget):
             self.reset_timeline_filters
         )
 
-        main_layout.addWidget(title)
-        main_layout.addWidget(self.tabs)
+        self.timeline_tab.operation_filter.currentTextChanged.connect(
+            self.filter_timeline
+        )
+
+        self.timeline_tab.search_input.textChanged.connect(
+            self.filter_timeline
+        )
+
+        self.sidebar.search_btn.clicked.connect(
+            lambda: (
+                self.pages.setCurrentIndex(0),
+                self.activate_sidebar_button(
+                    self.sidebar.search_btn
+                )
+            )
+        )
+
+        self.sidebar.dashboard_btn.clicked.connect(
+            self.show_dashboard
+        )
+
+        self.sidebar.timeline_btn.clicked.connect(
+            lambda: (
+                self.pages.setCurrentIndex(2),
+                self.activate_sidebar_button(
+                    self.sidebar.timeline_btn
+                )
+            )
+        )
+
+        self.sidebar.fraud_btn.clicked.connect(
+            lambda: (
+                self.pages.setCurrentIndex(3),
+                self.activate_sidebar_button(
+                    self.sidebar.fraud_btn
+                )
+            )
+        )
+
+        self.sidebar.rawdata_btn.clicked.connect(
+            lambda: (
+                self.pages.setCurrentIndex(4),
+                self.activate_sidebar_button(
+                    self.sidebar.rawdata_btn
+                )
+            )
+        )
+
+        self.sidebar.reports_btn.clicked.connect(
+            lambda: (
+                self.pages.setCurrentIndex(5),
+                self.activate_sidebar_button(
+                    self.sidebar.reports_btn
+                )
+            )
+        )
+
+        self.sidebar.about_btn.clicked.connect(
+            lambda: (
+                self.pages.setCurrentIndex(6),
+                self.activate_sidebar_button(
+                    self.sidebar.about_btn
+                )
+            )
+        )
+
+        main_layout.addLayout(header_layout)
+        content_layout = QHBoxLayout()
+        content_layout.addWidget(self.sidebar)
+        content_layout.addWidget(self.pages, 1)
+        main_layout.addLayout(content_layout)
 
         self.setLayout(main_layout)
 
@@ -124,9 +245,9 @@ class MainWindow(QWidget):
         }
 
         #appTitle {
-            font-size: 28px;
-            font-weight: 700;
-            color: #0F172A;
+            font-size:22px;
+            font-weight:700;
+            color:#0F172A;
             padding: 10px;
         }
 
@@ -221,7 +342,7 @@ class MainWindow(QWidget):
             background: white;
             border: 1px solid #E2E8F0;
             border-radius: 12px;
-            min-height: 110px;
+            min-height: 85px;
         }
 
         #cardValue {
@@ -398,7 +519,7 @@ class MainWindow(QWidget):
 
         QApplication.processEvents()
 
-        df = merge_customer_data(
+        df, stats = merge_customer_data(
             selected_results
         )
 
@@ -424,14 +545,28 @@ class MainWindow(QWidget):
         )
 
         balance = balance_summary(df)
-        risk_score, flags, operation_counts = calculate_risk(df)
+        (
+            risk_score,
+            flags,
+            operation_counts,
+            risk_matrix,
+            suspicious_lanterns,
+            suspicious_events,
+            verdict
+        ) = calculate_risk(df)
 
         self.session.balance_summary = balance
         self.session.risk_score = risk_score
         self.session.flags = flags
-        self.session.operation_counts = (
-            operation_counts
+        self.session.operation_counts = operation_counts
+        self.session.risk_matrix = risk_matrix
+        self.session.suspicious_lanterns = (
+            suspicious_lanterns
         )
+        self.session.suspicious_events = (
+            suspicious_events
+        )
+        self.session.verdict = verdict
         ops = operation_counts
 
         self.dashboard_tab.ul_success_card.update_value(
@@ -459,7 +594,7 @@ class MainWindow(QWidget):
         )
 
         self.dashboard_tab.unique_sn_card.update_value(
-            df["S/N"].nunique()
+            self.count_lanterns(df)
         )
 
         self.dashboard_tab.days_card.update_value(
@@ -496,6 +631,96 @@ class MainWindow(QWidget):
             risk_text
         )
 
+        # =====================================
+        # Customer Summary Panel
+        # =====================================
+
+        customer_ids = (
+            df["CustomerID"]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
+
+        customer_text = ", ".join(
+            customer_ids[:5]
+        )
+
+        if len(customer_ids) > 5:
+            customer_text += " ..."
+
+        self.dashboard_tab.customer_summary.setText(
+            f"""
+        Customer IDs: {customer_text}
+        UB3 Devices: {len(selected_results)}
+        Lanterns: {self.count_lanterns(df)}
+        Records: {len(df)}
+        Activity Days: {df['Date'].nunique()}
+        Current Balance: {balance['current']}
+        """
+        )
+
+        # =====================================
+        # Operation Summary Table
+        # =====================================
+
+        table = self.dashboard_tab.operations_table
+
+        table.clearContents()
+
+        sorted_ops = sorted(
+            ops.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        table.setRowCount(
+            len(sorted_ops)
+        )
+
+        for row, (operation, count) in enumerate(
+            sorted_ops
+        ):
+
+            table.setItem(
+                row,
+                0,
+                QTableWidgetItem(operation)
+            )
+
+            table.setItem(
+                row,
+                1,
+                QTableWidgetItem(str(count))
+            )
+
+        table.resizeColumnsToContents()
+
+        # =====================================
+        # Investigation Summary
+        # =====================================
+
+        top_operation = "N/A"
+
+        if len(sorted_ops) > 0:
+
+            top_operation = (
+                f"{sorted_ops[0][0]} "
+                f"({sorted_ops[0][1]})"
+            )
+
+        self.dashboard_tab.investigation_label.setText(
+            f"""
+        Risk Level: {risk_text}
+        Risk Score: {risk_score}
+        Flags Detected: {len(flags)}
+        Most Common Operation: {top_operation}
+
+        Merged Files: {stats['merged_files']}
+        Failed Files: {stats['failed_files']}
+        """
+        )
+
         project_root = os.path.dirname(
             os.path.dirname(
                 os.path.abspath(__file__)
@@ -522,14 +747,32 @@ class MainWindow(QWidget):
             output_file
         )
 
+        if stats["failed_files"] > 0:
+
+            QMessageBox.warning(
+                self,
+                "Import Warnings",
+                "\n".join(
+                    stats["errors"][:10]
+                )
+            )
+
         self.search_tab.status_label.setText(
-            f"Completed | Records: {len(df)} | Saved: {os.path.basename(output_file)}"
+            f"Completed | "
+            f"Records: {len(df)} | "
+            f"Merged: {stats['merged_files']} | "
+            f"Skipped Unlock: {stats['skipped_unlock']} | "
+            f"Failed: {stats['failed_files']}"
         )
 
         self.load_timeline()
         self.load_fraud_tab()
-        self.tabs.setCurrentWidget(
-            self.fraud_tab
+        self.pages.setCurrentWidget(
+            self.dashboard_tab
+        )
+
+        self.activate_sidebar_button(
+            self.sidebar.dashboard_btn
         )
 
     def add_checkbox(self, row):
@@ -622,6 +865,8 @@ class MainWindow(QWidget):
         if self.session.df is None:
             return
 
+        self.load_timeline_filters()
+
         timeline_df = self.session.df[
             [
                 "Date",
@@ -645,37 +890,26 @@ class MainWindow(QWidget):
 
         self.fraud_tab.flags_list.clear()
         self.fraud_tab.actions_list.clear()
+        self.fraud_tab.suspicious_lanterns.clear()
 
         risk_level = self.session.risk_level
         risk_score = self.session.risk_score
-
+        flags = self.session.flags
         ops = self.session.operation_counts
+        df = self.session.df
 
         # =====================================
-        # Summary Banner
+        # HEADER
         # =====================================
 
         self.fraud_tab.summary_label.setText(
             f"Risk Level: {risk_level} | "
-            f"Flags: {len(self.session.flags)} | "
+            f"Risk Score: {risk_score} | "
             f"Records: {self.session.record_count}"
         )
 
-        self.fraud_tab.summary_details.setText(
-            f"""
-            Risk Score: {risk_score}
-            Risk Level: {risk_level}
-
-            Records Analyzed: {self.session.record_count}
-
-            Flags Detected: {len(self.session.flags)}
-
-            Recommendation: Review Alerts, Operations and Recommendations tabs for detailed investigation results.
-            """
-                )
-
         # =====================================
-        # Dashboard Cards
+        # KPI CARDS
         # =====================================
 
         self.fraud_tab.score_card.update_value(
@@ -687,183 +921,263 @@ class MainWindow(QWidget):
         )
 
         self.fraud_tab.flags_card.update_value(
-            len(self.session.flags)
+            len(flags)
+        )
+
+        suspicious_ops = (
+            ops.get("UL.Fail", 0)
+            + ops.get("P.Fail", 0)
+            + ops.get("F.Reboot", 0)
+            + ops.get("UL.Airwatt short", 0)
+            + ops.get("AL.Unlocked", 0)
+        )
+
+        self.fraud_tab.operations_card.update_value(
+            suspicious_ops
         )
 
         # =====================================
-        # Risk Colors
+        # RISK COLOR
         # =====================================
 
         if risk_level == "LOW":
-
             color = "#22C55E"
 
         elif risk_level == "MEDIUM":
-
             color = "#EAB308"
 
         elif risk_level == "HIGH":
-
             color = "#F97316"
 
         else:
-
             color = "#DC2626"
 
         self.fraud_tab.level_card.value_label.setStyleSheet(
             f"""
-            font-size: 28px;
-            font-weight: bold;
-            color: {color};
+            font-size:28px;
+            font-weight:bold;
+            color:{color};
             """
         )
 
         # =====================================
-        # Alerts
+        # RISK MATRIX
         # =====================================
 
-        suspicious_count = len(
-            self.session.flags
-        )
+        matrix = [
+            ("UL.Fail", ops.get("UL.Fail", 0)),
+            ("P.Fail", ops.get("P.Fail", 0)),
+            ("F.Reboot", ops.get("F.Reboot", 0)),
+            ("UL.Airwatt short", ops.get("UL.Airwatt short", 0)),
+            ("AL.Unlocked", ops.get("AL.Unlocked", 0))
+        ]
 
-        self.fraud_tab.operations_card.update_value(
-            suspicious_count
-        )
+        table = self.fraud_tab.risk_matrix_table
 
-        if suspicious_count == 0:
+        table.clearContents()
+        table.setRowCount(len(matrix))
+
+        for row, (name, count) in enumerate(matrix):
+
+            table.setItem(
+                row,
+                0,
+                QTableWidgetItem(name)
+            )
+
+            table.setItem(
+                row,
+                1,
+                QTableWidgetItem(str(count))
+            )
+
+        # =====================================
+        # FLAGS
+        # =====================================
+
+        if len(flags) == 0:
 
             self.fraud_tab.flags_list.addItem(
-                "🟢 No alerts detected"
+                "🟢 No fraud indicators detected."
             )
 
         else:
 
-            for flag in self.session.flags:
+            for flag in flags:
 
                 self.fraud_tab.flags_list.addItem(
                     f"⚠ {flag}"
                 )
 
         # =====================================
-        # Operations Table
+        # SUSPICIOUS LANTERNS
         # =====================================
 
-        table = self.fraud_tab.operations_table
+        suspicious_ops_list = [
+            "UL.Fail",
+            "P.Fail",
+            "F.Reboot",
+            "UL.Airwatt short",
+            "AL.Unlocked"
+        ]
 
-        table.clearContents()
+        suspicious_df = df[
+            df["Operation"].isin(
+                suspicious_ops_list
+            )
+        ]
 
-        table.setRowCount(
-            len(ops)
-        )
+        if not suspicious_df.empty:
 
-        sorted_ops = sorted(
-            ops.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
-
-        for row, (operation, count) in enumerate(
-            sorted_ops
-        ):
-
-            op_item = QTableWidgetItem(
-                operation
+            lanterns = (
+                suspicious_df["S/N"]
+                .dropna()
+                .astype(str)
+                .unique()
             )
 
-            count_item = QTableWidgetItem(
-                str(count)
-            )
+            for sn in lanterns[:50]:
 
-            if operation in [
-                "UL.Fail",
-                "P.Fail",
-                "F.Reboot",
-                "UL.Airwatt short",
-                "AL.Unlocked"
-            ]:
-
-                op_item.setBackground(
-                    QColor("#FFE5E5")
+                self.fraud_tab.suspicious_lanterns.addItem(
+                    sn
                 )
 
-                count_item.setBackground(
-                    QColor("#FFE5E5")
-                )
+        else:
 
-            table.setItem(
-                row,
-                0,
-                op_item
+            self.fraud_tab.suspicious_lanterns.addItem(
+                "No suspicious lanterns"
             )
-
-            table.setItem(
-                row,
-                1,
-                count_item
-            )
-
-        table.resizeColumnsToContents()
 
         # =====================================
-        # Recommendations
+        # SUSPICIOUS EVENTS TABLE
+        # =====================================
+
+        events_table = (
+            self.fraud_tab.suspicious_events_table
+        )
+
+        events_table.clearContents()
+
+        if not suspicious_df.empty:
+
+            events_df = suspicious_df[
+                [
+                    "Date",
+                    "Time",
+                    "Operation",
+                    "S/N"
+                ]
+            ].head(100)
+
+            events_table.setRowCount(
+                len(events_df)
+            )
+
+            for row, values in enumerate(
+                events_df.values
+            ):
+
+                for col, value in enumerate(values):
+
+                    events_table.setItem(
+                        row,
+                        col,
+                        QTableWidgetItem(
+                            str(value)
+                        )
+                    )
+
+        else:
+
+            events_table.setRowCount(0)
+
+        # =====================================
+        # INVESTIGATION VERDICT
+        # =====================================
+
+        if risk_score >= 80:
+
+            verdict = """
+            CRITICAL RISK
+
+            Strong evidence of abnormal activity.
+
+            Immediate field investigation is recommended.
+
+            Review unlock failures, passcode abuse,
+            device reboots and low-balance attempts.
+            """
+
+        elif risk_score >= 50:
+
+            verdict = """
+            HIGH RISK
+
+            Multiple suspicious indicators detected.
+
+            Recommend customer history review and
+            hardware verification.
+            """
+
+        elif risk_score >= 20:
+
+            verdict = """
+            MEDIUM RISK
+
+            Some unusual activity detected.
+
+            Monitor customer activity and review
+            high-frequency operations.
+            """
+
+        else:
+
+            verdict = """
+            LOW RISK
+
+            No significant fraud indicators detected.
+
+            Customer behavior appears normal.
+            """
+
+        self.fraud_tab.verdict_label.setText(
+            verdict
+        )
+
+        # =====================================
+        # RECOMMENDED ACTIONS
         # =====================================
 
         actions = []
 
-        ul_fail = ops.get(
-            "UL.Fail",
-            0
-        )
-
-        p_fail = ops.get(
-            "P.Fail",
-            0
-        )
-
-        reboot = ops.get(
-            "F.Reboot",
-            0
-        )
-
-        airwatt_short = ops.get(
-            "UL.Airwatt short",
-            0
-        )
-
-        if ul_fail > 20:
+        if ops.get("UL.Fail", 0) > 5:
 
             actions.append(
-                f"🔴 Critical: {ul_fail} unlock failures detected. Immediate investigation required."
+                "Review repeated unlock failures."
             )
 
-        elif ul_fail > 5:
+        if ops.get("P.Fail", 0) > 5:
 
             actions.append(
-                f"🟠 Review unlock failures ({ul_fail})."
+                "Investigate passcode abuse activity."
             )
 
-        if p_fail > 10:
+        if ops.get("F.Reboot", 0) > 5:
 
             actions.append(
-                f"🔴 Review passcode abuse activity ({p_fail} failures)."
+                "Check hardware stability and firmware."
             )
 
-        if reboot > 10:
+        if ops.get("UL.Airwatt short", 0) > 5:
 
             actions.append(
-                f"🟠 Device rebooted {reboot} times. Check hardware stability."
-            )
-
-        if airwatt_short > 5:
-
-            actions.append(
-                f"🟡 Low balance unlock attempts detected."
+                "Review low balance unlock attempts."
             )
 
         if len(actions) == 0:
 
             actions.append(
-                "🟢 No suspicious activity detected."
+                "No corrective action required."
             )
 
         for action in actions:
@@ -1149,5 +1463,81 @@ class MainWindow(QWidget):
         self.timeline_tab.timeline_summary.setText(
             f"Records Found: {len(timeline_df)}"
         )
+
+    def activate_sidebar_button(self, active_button):
+
+        buttons = [
+            self.sidebar.search_btn,
+            self.sidebar.dashboard_btn,
+            self.sidebar.timeline_btn,
+            self.sidebar.fraud_btn,
+            self.sidebar.rawdata_btn,
+            self.sidebar.reports_btn,
+            self.sidebar.about_btn
+        ]
+
+        for btn in buttons:
+            btn.setChecked(False)
+
+        active_button.setChecked(True)
+
+    def show_dashboard(self):
+        self.pages.setCurrentIndex(1)
+        self.activate_sidebar_button(
+            self.sidebar.dashboard_btn
+        )
+
+    def load_timeline_filters(self):
+
+        if self.session.df is None:
+            return
+
+        operations = sorted(
+            self.session.df["Operation"]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
+
+        self.timeline_tab.operation_filter.clear()
+
+        self.timeline_tab.operation_filter.addItem(
+            "All Operations"
+        )
+
+        self.timeline_tab.operation_filter.addItems(
+            operations
+        )
+
+    def count_lanterns(self, df):
+
+        valid_models = (
+            "AF80",
+            "AC20",
+            "AC40",
+            "AC10",
+            "A100",
+            "B100",
+            "160A"
+        )
+
+        serials = (
+            df["S/N"]
+            .fillna("")
+            .astype(str)
+            .str.upper()
+            .str.strip()
+        )
+
+        lantern_rows = serials[
+            serials.str.endswith(
+                valid_models,
+                na=False
+            )
+        ]
+
+        self.session.lanterns = lantern_rows.tolist()
+
+        return len(lantern_rows)
 
 
