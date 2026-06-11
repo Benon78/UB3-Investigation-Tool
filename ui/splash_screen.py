@@ -1,21 +1,19 @@
-from PySide6.QtWidgets import (
-    QSplashScreen
-)
-
-from PySide6.QtGui import (
-    QPixmap
-)
-
+from PySide6.QtWidgets import QSplashScreen
+from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
+
+from core.resource_path import resource_path
 
 
 class SplashScreen(QSplashScreen):
 
     def __init__(self):
 
-        pixmap = QPixmap(
-            "assets/splash/splash_v1.png"
+        image_path = resource_path(
+            "assets/splash/wassha_logo.jpeg"
         )
+
+        pixmap = QPixmap(image_path)
 
         super().__init__(pixmap)
 

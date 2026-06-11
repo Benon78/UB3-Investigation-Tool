@@ -5,67 +5,50 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.0] - 2026-06-11
 
-### 🎉 Production Release
-
-WASSHA UB3 Customer Analyzer is now officially released as a standalone Windows desktop application.
-
 ### Added
 
-* Customer Search Center
-* Multi-UB3 Analysis
-* Analytics Dashboard
-* Timeline Investigation Center
-* Fraud Investigation Center
-* Raw Data Explorer
-* Report Generation Center
-* TXT Investigation Reports
-* Excel Export Engine
-* Risk Scoring System
-* Suspicious Lantern Detection
-* Risk Matrix Analysis
-* Investigation Verdict Engine
-* Recommendation Engine
+- Customer Search Engine
+- Multi-UB3 Analysis
+- Dashboard Analytics
+- Timeline Investigation
+- Fraud Detection Module
+- Risk Scoring Engine
+- Suspicious Lantern Detection
+- Suspicious Event Tracking
+- Raw Data Explorer
+- Operation Filtering
+- Search Across Records
+- Export Filtered Data
+- Reports Center
+- Executive Reports
+- Fraud Investigation Reports
+- Timeline Reports
+- Excel Export with Color Coding
+- Splash Screen
+- Offline Installer
 
 ### Improved
 
-* Scrollable Dashboard Layout
-* Improved Fraud Analytics
-* Improved Timeline Filtering
-* Improved Operation Summary
-* Improved Risk Assessment
-* Enhanced Data Explorer
-* Enhanced Report Preview
-* Better Error Handling
-* Faster CSV Merge Processing
-
-### Export Features
-
-* Merged Excel Export
-* Filtered Excel Export
-* Color-Coded Status Export
-* Investigation Reports
-* Executive Reports
-* Fraud Reports
-* Timeline Reports
-
-### Security
-
-* Fully Offline Processing
-* No Internet Dependency
-* Local File Analysis Only
+- Risk Assessment Accuracy
+- Lantern Detection Logic
+- Suspicious Operations Analysis
+- UI Navigation
+- Dashboard KPIs
+- Fraud Investigation Workflow
+- Report Preview System
 
 ### Fixed
 
-* Dashboard Layout Collapsing
-* Timeline Filter Issues
-* Fraud Analysis Duplications
-* Data Explorer Export Issues
-* Report Preview Refresh Issues
+- Export Excel Color Mapping
+- Raw Data Refresh
+- Report Generation Logic
+- Resource Loading in Executable Build
+- Application Icon Loading
+- Splash Screen Loading
 
----
+### Release
 
-Version: 1.0.0
-Release Type: Production
+First Production Release.
 
 
 ## [0.6.0] - 2026-06-10

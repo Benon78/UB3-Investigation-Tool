@@ -23,6 +23,7 @@ from core.report_generator import (
     build_timeline_report,
     build_preview
 )
+from core.resource_path import resource_path
 
 from ui.widgets.dashboard_card import DashboardCard
 from ui.tabs.dashboard_tab import DashboardTab
@@ -59,7 +60,9 @@ class MainWindow(QWidget):
 
         logo = QLabel()
         pixmap = QPixmap(
-            "assets/logos/wassha_logo_white.png"
+            resource_path(
+                "assets/logos/wassha_logo_white.png"
+            )
         )
 
         logo.setPixmap(

@@ -1,0 +1,24 @@
+
+        WASSHA UB3 EXECUTIVE REPORT
+        Generated: 2026-06-11 17:24:28
+        ========================================
+
+        CUSTOMER SUMMARY
+        UB3 Found: 1
+        Records Analyzed: 3951
+        Lantern Activities: 3701
+        Current Balance: 598972
+        ========================================
+
+        RISK ASSESSMENT
+        Risk Score: 30
+        Risk Level: MEDIUM
+        Flags Detected: 2
+        ========================================
+
+        TOP FLAGS
+
+        • High Unlock Failure Rate (21)
+• Repeated Unlock Attempts (2539)
+
+
