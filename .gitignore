@@ -10,6 +10,7 @@ dist/
 
 # Installer Output
 output/
+installer/
 
 # Reports
 reports/*.txt
