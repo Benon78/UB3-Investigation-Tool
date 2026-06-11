@@ -14,7 +14,7 @@ class SplashScreen(QSplashScreen):
     def __init__(self):
 
         pixmap = QPixmap(
-            "assets/splash/splash.jpeg"
+            "assets/splash/splash_v1.png"
         )
 
         super().__init__(pixmap)
