@@ -45,7 +45,7 @@ class SearchTab(QWidget):
         self.customer_input = QLineEdit()
 
         self.customer_input.setPlaceholderText(
-            "Enter Customer ID"
+            "Enter Customer OwnerID"
         )
 
         search_layout = QHBoxLayout()

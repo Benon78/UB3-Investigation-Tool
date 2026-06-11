@@ -25,6 +25,7 @@ from ui.tabs.timeline_tab import TimelineTab
 from ui.tabs.fraud_tab import FraudTab
 from ui.tabs.about_tab import AboutTab
 from ui.tabs.reports_tab import ReportsTab
+from ui.tabs.rawdata_tab import RawDataTab
 from ui.widgets.sidebar import Sidebar
 
 
@@ -105,7 +106,7 @@ class MainWindow(QWidget):
         self.fraud_tab = FraudTab()
         self.reports_tab = ReportsTab()
         self.about_tab = AboutTab()
-        self.rawdata_tab = QWidget()
+        self.rawdata_tab = RawDataTab()
 
         self.pages.addWidget(
             self.search_tab
@@ -210,6 +211,22 @@ class MainWindow(QWidget):
                     self.sidebar.about_btn
                 )
             )
+        )
+
+        self.rawdata_tab.operation_filter.currentTextChanged.connect(
+            self.filter_raw_data
+        )
+
+        self.rawdata_tab.search_input.textChanged.connect(
+            self.filter_raw_data
+        )
+
+        self.rawdata_tab.refresh_btn.clicked.connect(
+            self.refresh_raw_data
+        )
+
+        self.rawdata_tab.export_btn.clicked.connect(
+            self.export_filtered_data
         )
 
         main_layout.addLayout(header_layout)
@@ -766,6 +783,7 @@ class MainWindow(QWidget):
         )
 
         self.load_timeline()
+        self.load_raw_data()
         self.load_fraud_tab()
         self.pages.setCurrentWidget(
             self.dashboard_tab
@@ -1539,5 +1557,236 @@ class MainWindow(QWidget):
         self.session.lanterns = lantern_rows.tolist()
 
         return len(lantern_rows)
+
+    def load_raw_data(self):
+
+        if self.session.df is None:
+            return
+
+        df = self.session.df.copy()
+
+        table = self.rawdata_tab.table
+
+        table.clear()
+
+        table.setColumnCount(
+            len(df.columns)
+        )
+
+        table.setHorizontalHeaderLabels(
+            list(df.columns)
+        )
+
+        table.setRowCount(
+            len(df)
+        )
+
+        for row in range(len(df)):
+
+            for col in range(len(df.columns)):
+
+                value = str(
+                    df.iloc[row, col]
+                )
+
+                item = QTableWidgetItem(
+                    value
+                )
+
+                item.setToolTip(
+                    value
+                )
+
+                table.setItem(
+                    row,
+                    col,
+                    item
+                )
+
+        table.resizeColumnsToContents()
+
+        self.rawdata_tab.summary_label.setText(
+            f"Records Loaded: {len(df):,}"
+        )
+
+        self.load_raw_filters()
+
+    def load_raw_filters(self):
+
+        if self.session.df is None:
+            return
+
+        operations = sorted(
+            self.session.df["Operation"]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
+
+        self.rawdata_tab.operation_filter.clear()
+
+        self.rawdata_tab.operation_filter.addItem(
+            "All Operations"
+        )
+
+        self.rawdata_tab.operation_filter.addItems(
+            operations
+        )
+
+    def filter_raw_data(self):
+
+        if self.session.df is None:
+            return
+
+        df = self.session.df.copy()
+
+        operation = (
+            self.rawdata_tab.operation_filter.currentText()
+        )
+
+        if operation != "All Operations":
+
+            df = df[
+                df["Operation"] == operation
+            ]
+
+        keyword = (
+            self.rawdata_tab.search_input.text()
+            .strip()
+            .lower()
+        )
+
+        if keyword:
+
+            mask = df.astype(str).apply(
+                lambda x:
+                x.str.lower().str.contains(
+                    keyword,
+                    na=False
+                )
+            )
+
+            df = df[
+                mask.any(axis=1)
+            ]
+
+        table = self.rawdata_tab.table
+
+        table.setRowCount(
+            len(df)
+        )
+
+        for row in range(len(df)):
+
+            for col in range(len(df.columns)):
+
+                item = QTableWidgetItem(
+                    str(
+                        df.iloc[row, col]
+                    )
+                )
+
+                table.setItem(
+                    row,
+                    col,
+                    item
+                )
+
+        self.rawdata_tab.summary_label.setText(
+            f"Records Loaded: {len(df):,}"
+        )
+
+        table.resizeColumnsToContents()
+
+    def refresh_raw_data(self):
+
+        self.load_raw_data()
+
+        self.rawdata_tab.search_input.clear()
+
+        self.rawdata_tab.operation_filter.setCurrentIndex(
+            0
+        )
+
+    def export_filtered_data(self):
+
+        if self.session.df is None:
+            return
+
+        file_name, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Filtered Data",
+            "filtered_data.xlsx",
+            "Excel Files (*.xlsx)"
+        )
+
+        if not file_name:
+            return
+
+        operation = (
+            self.rawdata_tab.operation_filter.currentText()
+        )
+
+        keyword = (
+            self.rawdata_tab.search_input.text()
+            .strip()
+            .lower()
+        )
+
+        df = self.session.df.copy()
+
+        # ==========================
+        # Operation Filter
+        # ==========================
+
+        if operation != "All Operations":
+
+            df = df[
+                df["Operation"] == operation
+            ]
+
+        # ==========================
+        # Keyword Filter
+        # ==========================
+
+        if keyword:
+
+            mask = df.astype(str).apply(
+                lambda x:
+                x.str.lower().str.contains(
+                    keyword,
+                    na=False
+                )
+            )
+
+            df = df[
+                mask.any(axis=1)
+            ]
+
+        # ==========================
+        # No Data
+        # ==========================
+
+        if df.empty:
+
+            self.rawdata_tab.summary_label.setText(
+                "No records to export"
+            )
+
+            return
+
+        # ==========================
+        # Export Using Central Engine
+        # ==========================
+
+        export_excel(
+            df,
+            file_name
+        )
+
+        self.rawdata_tab.summary_label.setText(
+            f"Exported {len(df):,} records"
+        )
+
 
 
