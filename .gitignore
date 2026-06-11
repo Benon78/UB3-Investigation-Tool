@@ -1,9 +1,27 @@
+# Python
 venv/
 __pycache__/
 *.pyc
-*.xlsx
-*.csv
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Installer Output
 output/
-exports/
-.idea/
+
+# Reports
+reports/*.txt
+
+# Exports
+exports/*.xlsx
+exports/*.csv
+
+# IDE
 .vscode/
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
