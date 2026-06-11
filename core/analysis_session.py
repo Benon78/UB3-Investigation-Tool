@@ -40,3 +40,13 @@ class AnalysisSession:
         self.recommendations = []
 
         self.lanterns = []
+
+        # ==========================
+        # Reporting Data
+        # ==========================
+
+        self.customer_summary = ""
+
+        self.investigation_notes = ""
+
+        self.report_preview = ""

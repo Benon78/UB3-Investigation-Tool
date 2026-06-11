@@ -2,10 +2,15 @@ from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QVBoxLayout,
-    QCheckBox,
     QPushButton,
-    QFrame
+    QTextEdit,
+    QFrame,
+    QSplitter,
+    QRadioButton,
+    QButtonGroup
 )
+
+from PySide6.QtCore import Qt
 
 
 class ReportsTab(QWidget):
@@ -13,84 +18,248 @@ class ReportsTab(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout()
-        layout.setContentsMargins(
-            20,20,20,20
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(
+            15, 15, 15, 15
         )
+        main_layout.setSpacing(8)
+
+        # =====================================
+        # TITLE
+        # =====================================
 
         title = QLabel(
             "Reports Center"
         )
 
         title.setStyleSheet("""
-            font-size:24px;
-            font-weight:bold;
+            font-size:18px;
+            font-weight:700;
             color:#0F172A;
+            padding:2px;
         """)
 
-        card = QFrame()
+        # =====================================
+        # SPLITTER
+        # =====================================
 
-        card.setStyleSheet("""
+        splitter = QSplitter(
+            Qt.Horizontal
+        )
+
+        # =====================================
+        # LEFT PANEL
+        # =====================================
+
+        left_panel = QFrame()
+
+        left_panel.setMaximumWidth(
+            320
+        )
+
+        left_panel.setStyleSheet("""
             QFrame{
                 background:white;
                 border:1px solid #E2E8F0;
-                border-radius:12px;
-                padding:15px;
+                border-radius:10px;
             }
         """)
 
-        card_layout = QVBoxLayout()
+        left_layout = QVBoxLayout()
+        left_layout.setContentsMargins(
+            15, 15, 15, 15
+        )
+        left_layout.setSpacing(10)
 
-        card_layout.addWidget(
-            QLabel("Report Types")
+        report_title = QLabel(
+            "Report Builder"
         )
 
-        self.executive_report = QCheckBox(
+        report_title.setStyleSheet("""
+            font-size:16px;
+            font-weight:bold;
+        """)
+
+        # =====================================
+        # REPORT TYPES
+        # =====================================
+
+        self.executive_report = QRadioButton(
             "Executive Report"
         )
 
-        self.fraud_report = QCheckBox(
+        self.fraud_report = QRadioButton(
             "Fraud Investigation Report"
         )
 
-        self.timeline_report = QCheckBox(
+        self.timeline_report = QRadioButton(
             "Timeline Report"
         )
 
-        self.generate_pdf_btn = QPushButton(
-            "Generate PDF"
+        self.executive_report.setChecked(
+            True
         )
 
-        self.generate_excel_btn = QPushButton(
-            "Generate Excel"
-        )
+        self.report_group = QButtonGroup()
 
-        card_layout.addWidget(
+        self.report_group.addButton(
             self.executive_report
         )
 
-        card_layout.addWidget(
+        self.report_group.addButton(
             self.fraud_report
         )
 
-        card_layout.addWidget(
+        self.report_group.addButton(
             self.timeline_report
         )
 
-        card_layout.addSpacing(15)
+        # =====================================
+        # BUTTONS
+        # =====================================
 
-        card_layout.addWidget(
-            self.generate_pdf_btn
+        self.preview_btn = QPushButton(
+            "Preview Report"
         )
 
-        card_layout.addWidget(
-            self.generate_excel_btn
+        self.export_report_btn = QPushButton(
+            "Export Report (.txt)"
         )
 
-        card.setLayout(card_layout)
+        left_layout.addWidget(
+            report_title
+        )
 
-        layout.addWidget(title)
-        layout.addWidget(card)
-        layout.addStretch()
+        left_layout.addSpacing(5)
 
-        self.setLayout(layout)
+        left_layout.addWidget(
+            self.executive_report
+        )
+
+        left_layout.addWidget(
+            self.fraud_report
+        )
+
+        left_layout.addWidget(
+            self.timeline_report
+        )
+
+        left_layout.addSpacing(15)
+
+        left_layout.addWidget(
+            self.preview_btn
+        )
+
+        left_layout.addWidget(
+            self.export_report_btn
+        )
+
+        left_layout.addStretch()
+
+        left_panel.setLayout(
+            left_layout
+        )
+
+        # =====================================
+        # RIGHT PANEL
+        # =====================================
+
+        right_panel = QFrame()
+
+        right_panel.setStyleSheet("""
+            QFrame{
+                background:white;
+                border:1px solid #E2E8F0;
+                border-radius:10px;
+            }
+        """)
+
+        right_layout = QVBoxLayout()
+        right_layout.setContentsMargins(
+            15, 15, 15, 15
+        )
+
+        preview_title = QLabel(
+            "Report Preview"
+        )
+
+        preview_title.setStyleSheet("""
+            font-size:16px;
+            font-weight:bold;
+        """)
+
+        self.preview_text = QTextEdit()
+
+        self.preview_text.setReadOnly(
+            True
+        )
+
+        self.preview_text.setPlaceholderText(
+            "Select a report type to preview..."
+        )
+
+        right_layout.addWidget(
+            preview_title
+        )
+
+        right_layout.addWidget(
+            self.preview_text
+        )
+
+        right_panel.setLayout(
+            right_layout
+        )
+
+        # =====================================
+        # SPLITTER
+        # =====================================
+
+        splitter.addWidget(
+            left_panel
+        )
+
+        splitter.addWidget(
+            right_panel
+        )
+
+        splitter.setSizes(
+            [300, 900]
+        )
+
+        # =====================================
+        # STATUS BAR
+        # =====================================
+
+        self.status_label = QLabel(
+            "Ready"
+        )
+
+        self.status_label.setStyleSheet("""
+            background:#FFF7ED;
+            border:1px solid #FED7AA;
+            border-radius:8px;
+            padding:8px;
+            color:#9A3412;
+            font-weight:bold;
+        """)
+
+        # =====================================
+        # BUILD PAGE
+        # =====================================
+
+        main_layout.addWidget(
+            title
+        )
+
+        main_layout.addWidget(
+            splitter,
+            1
+        )
+
+        main_layout.addWidget(
+            self.status_label
+        )
+
+        self.setLayout(
+            main_layout
+        )

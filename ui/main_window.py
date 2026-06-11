@@ -17,6 +17,12 @@ from PySide6.QtGui import QIcon
 from core.customer_finder import find_customer_recursive
 from core.csv_merger import merge_customer_data, export_excel
 from core.analysis_session import AnalysisSession
+from core.report_generator import (
+    build_executive_report,
+    build_fraud_report,
+    build_timeline_report,
+    build_preview
+)
 
 from ui.widgets.dashboard_card import DashboardCard
 from ui.tabs.dashboard_tab import DashboardTab
@@ -34,7 +40,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("WASSHA UB3 Analyzer v0.6.0")
+        self.setWindowTitle("WASSHA UB3 Analyzer v1.0.0")
         self.resize(1280, 800)
         self.setMinimumSize(1100, 700)
 
@@ -229,6 +235,26 @@ class MainWindow(QWidget):
             self.export_filtered_data
         )
 
+        self.reports_tab.export_report_btn.clicked.connect(
+            self.export_report
+        )
+
+        self.reports_tab.preview_btn.clicked.connect(
+            self.preview_report
+        )
+
+        self.reports_tab.executive_report.toggled.connect(
+            self.preview_report
+        )
+
+        self.reports_tab.fraud_report.toggled.connect(
+            self.preview_report
+        )
+
+        self.reports_tab.timeline_report.toggled.connect(
+            self.preview_report
+        )
+
         main_layout.addLayout(header_layout)
         content_layout = QHBoxLayout()
         content_layout.addWidget(self.sidebar)
@@ -387,6 +413,33 @@ class MainWindow(QWidget):
             background: #F58220;
             border: 2px solid #F58220;
             border-radius: 4px;
+        }
+
+        QRadioButton {
+            spacing: 8px;
+            font-size: 13px;
+            color: #1E293B;
+        }
+
+        QRadioButton::indicator {
+            width: 18px;
+            height: 18px;
+        }
+
+        QRadioButton::indicator:unchecked {
+            border: 2px solid #CBD5E1;
+            border-radius: 9px;
+            background: white;
+        }
+
+        QRadioButton::indicator:checked {
+            border: 2px solid #F58220;
+            border-radius: 9px;
+            background: #F58220;
+        }
+
+        QRadioButton:hover {
+            color: #F58220;
         }
         """
 
@@ -785,6 +838,7 @@ class MainWindow(QWidget):
         self.load_timeline()
         self.load_raw_data()
         self.load_fraud_tab()
+
         self.pages.setCurrentWidget(
             self.dashboard_tab
         )
@@ -1788,5 +1842,266 @@ class MainWindow(QWidget):
             f"Exported {len(df):,} records"
         )
 
+    def generate_report(self):
 
+        if self.session.df is None:
 
+            QMessageBox.warning(
+                self,
+                "No Data",
+                "Run analysis first."
+            )
+
+            return
+
+        report_folder = os.path.join(
+            os.getcwd(),
+            "reports"
+        )
+
+        os.makedirs(
+            report_folder,
+            exist_ok=True
+        )
+
+        timestamp = datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
+
+        generated = []
+
+        # =====================================
+        # Executive Report
+        # =====================================
+
+        if self.reports_tab.executive_report.isChecked():
+
+            report = build_executive_report(
+                self.session
+            )
+
+            file_path = os.path.join(
+                report_folder,
+                f"Executive_Report_{timestamp}.txt"
+            )
+
+            with open(
+                file_path,
+                "w",
+                encoding="utf-8"
+            ) as f:
+
+                f.write(report)
+
+            generated.append(
+                os.path.basename(file_path)
+            )
+
+        # =====================================
+        # Fraud Report
+        # =====================================
+
+        if self.reports_tab.fraud_report.isChecked():
+
+            report = build_fraud_report(
+                self.session
+            )
+
+            file_path = os.path.join(
+                report_folder,
+                f"Fraud_Report_{timestamp}.txt"
+            )
+
+            with open(
+                file_path,
+                "w",
+                encoding="utf-8"
+            ) as f:
+
+                f.write(report)
+
+            generated.append(
+                os.path.basename(file_path)
+            )
+
+        # =====================================
+        # Timeline Report
+        # =====================================
+
+        if self.reports_tab.timeline_report.isChecked():
+
+            report = build_timeline_report(
+                self.session
+            )
+
+            file_path = os.path.join(
+                report_folder,
+                f"Timeline_Report_{timestamp}.txt"
+            )
+
+            with open(
+                file_path,
+                "w",
+                encoding="utf-8"
+            ) as f:
+
+                f.write(report)
+
+            generated.append(
+                os.path.basename(file_path)
+            )
+
+        # =====================================
+        # No Selection
+        # =====================================
+
+        if len(generated) == 0:
+
+            QMessageBox.warning(
+                self,
+                "Reports",
+                "Select at least one report."
+            )
+
+            return
+
+        QMessageBox.information(
+            self,
+            "Reports Generated",
+            "\n".join(generated)
+        )
+
+    def preview_report(self):
+
+        self.reports_tab.preview_text.clear()
+
+        report_type = self.get_selected_report_type()
+
+        if report_type is None:
+            return
+
+        if self.session.df is None:
+
+            QMessageBox.warning(
+                self,
+                "No Analysis",
+                "Run analysis first."
+            )
+
+            return
+
+        preview = build_preview(
+            self.session
+        )
+
+        self.reports_tab.preview_text.setText(
+            preview
+        )
+
+        self.reports_tab.status_label.setText(
+            f"Preview Loaded: {report_type.title()} Report"
+        )
+
+    def export_report(self):
+
+        if self.session.df is None:
+
+            QMessageBox.warning(
+                self,
+                "No Analysis",
+                "Run analysis first."
+            )
+
+            return
+
+        report_text = ""
+
+        if self.reports_tab.executive_report.isChecked():
+
+            report_text += (
+                build_executive_report(
+                    self.session
+                )
+                + "\n\n"
+            )
+
+        if self.reports_tab.fraud_report.isChecked():
+
+            report_text += (
+                build_fraud_report(
+                    self.session
+                )
+                + "\n\n"
+            )
+
+        if self.reports_tab.timeline_report.isChecked():
+
+            report_text += (
+                build_timeline_report(
+                    self.session
+                )
+                + "\n\n"
+            )
+
+        if not report_text:
+
+            QMessageBox.warning(
+                self,
+                "No Report Selected",
+                "Select at least one report."
+            )
+
+            return
+
+        reports_folder = os.path.join(
+            os.getcwd(),
+            "reports"
+        )
+
+        os.makedirs(
+            reports_folder,
+            exist_ok=True
+        )
+
+        customer = "UNKNOWN"
+
+        if self.session.selected_results:
+
+            customer = (
+                self.session.selected_results[0]
+                .get("customer_id", "UNKNOWN")
+            )
+
+            file_path = os.path.join(
+                reports_folder,
+                f"report_{customer}_{self.session.risk_level}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            )
+
+        with open(
+            file_path,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
+            f.write(
+                report_text
+            )
+
+        QMessageBox.information(
+            self,
+            "Report Generated",
+            f"Saved:\n{file_path}"
+        )
+
+    def get_selected_report_type(self):
+
+        if self.reports_tab.executive_report.isChecked():
+            return "executive"
+
+        if self.reports_tab.fraud_report.isChecked():
+            return "fraud"
+
+        if self.reports_tab.timeline_report.isChecked():
+            return "timeline"
+
+        return None

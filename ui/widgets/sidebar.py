@@ -117,7 +117,7 @@ class Sidebar(QWidget):
         layout.addStretch()
 
         version = QLabel(
-            "v0.6.0"
+            "v1.0.0"
         )
 
         version.setAlignment(

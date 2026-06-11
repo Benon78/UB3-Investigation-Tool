@@ -34,19 +34,19 @@ The system automatically:
 
 ### Search Center
 
-![Search Center](docs/images/search-center.png)
+![Search Center](docs/images/search-center.jpeg)
 
 ### Analytics Dashboard
 
-![Dashboard](docs/images/dashboard.png)
+![Dashboard](docs/images/dashboard.jpeg)
 
 ### Timeline Investigation
 
-![Timeline](docs/images/timeline.png)
+![Timeline](docs/images/timeline.jpeg)
 
 ### Fraud Investigation Center
 
-![Fraud](docs/images/fraud-center.png)
+![Fraud](docs/images/fraud-center.jpeg)
 
 ---
 

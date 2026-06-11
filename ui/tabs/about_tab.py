@@ -33,7 +33,7 @@ class AboutTab(QWidget):
         """)
 
         version = QLabel(
-            "Version 0.6.0"
+            "Version 1.0.0"
         )
 
         version.setAlignment(
